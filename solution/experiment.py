@@ -4,6 +4,8 @@ import gc
 import json
 import os
 import shutil
+import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -143,6 +145,18 @@ def score_run(cfg, predictions, split, state=None, data_dir="data", evidence_dir
     return read_json(output)
 
 
+def isolated(operation, cfg, data_dir, work_dir, **kwargs):
+    request = {"operation": operation, "config": cfg, "data_dir": str(data_dir),
+               "work_dir": str(work_dir), **kwargs}
+    request_id = fingerprint(request)
+    directory = Path(work_dir)/"worker_requests"
+    path, result_path = directory/f"{request_id}.json", directory/f"{request_id}.result.json"
+    request["result_path"] = str(result_path)
+    write_json(path, request)
+    subprocess.run([sys.executable, "-u", "-m", "solution.worker", str(path)], check=True)
+    return read_json(result_path)
+
+
 def run_suite(data_dir="data", work_dir="work", bonus=True, steps=None):
     validate_data(data_dir)
     configs = [load_config(f"configs/e{i}.yaml") for i in range(4)]
@@ -158,14 +172,20 @@ def run_suite(data_dir="data", work_dir="work", bonus=True, steps=None):
     runs = {}
     for cfg in configs:
         write_json(Path("report/configs")/f"{cfg['name'].lower()}.json", cfg)
-        checkpoint, state = train_sft(cfg, data_dir, work_dir) if "lora" in cfg else (None, None)
+        if "lora" in cfg:
+            trained = isolated("train", cfg, data_dir, work_dir)
+            checkpoint, state = trained["checkpoint"], trained["state"]
+        else:
+            checkpoint, state = None, None
         if state:
             write_json(Path("report/runs")/f"{cfg['name'].lower()}.json", state)
             log_dir = Path("report/logs")
             log_dir.mkdir(parents=True, exist_ok=True)
             shutil.copy2(Path(work_dir)/cfg["name"].lower()/"train_log.jsonl", log_dir/f"{cfg['name'].lower()}.jsonl")
-        validation = score_run(cfg, infer(cfg, checkpoint, "val", data_dir, work_dir), "val", state, data_dir)
-        score_run(cfg, infer(cfg, checkpoint, "test", data_dir, work_dir), "test", state, data_dir)
+        val_prediction = isolated("infer", cfg, data_dir, work_dir, checkpoint=checkpoint, split="val")["predictions"]
+        validation = score_run(cfg, val_prediction, "val", state, data_dir)
+        test_prediction = isolated("infer", cfg, data_dir, work_dir, checkpoint=checkpoint, split="test")["predictions"]
+        score_run(cfg, test_prediction, "test", state, data_dir)
         runs[cfg["name"]] = {"cfg": cfg, "checkpoint": str(checkpoint) if checkpoint else None,
                              "state": state, "validation": validation}
     best = max((runs[f"E{i}"] for i in (1, 2, 3)),
@@ -176,11 +196,13 @@ def run_suite(data_dir="data", work_dir="work", bonus=True, steps=None):
     low, high = ablations(best["cfg"], "data_size")
     for cfg in (low, high):
         write_json(Path("report/configs")/f"{cfg['name'].lower()}.json", cfg)
-    checkpoint, state = train_sft(low, data_dir, work_dir)
+    trained = isolated("train", low, data_dir, work_dir)
+    checkpoint, state = trained["checkpoint"], trained["state"]
     write_json("report/runs/e4_data_size_0.1.json", state)
     shutil.copy2(Path(work_dir)/low["name"].lower()/"train_log.jsonl", "report/logs/e4_data_size_0.1.jsonl")
-    score_run(low, infer(low, checkpoint, "val", data_dir, work_dir), "val", state, data_dir)
-    score_run(low, infer(low, checkpoint, "test", data_dir, work_dir), "test", state, data_dir)
+    for split in ("val", "test"):
+        prediction = isolated("infer", low, data_dir, work_dir, checkpoint=checkpoint, split=split)["predictions"]
+        score_run(low, prediction, split, state, data_dir)
     # 100% is exactly the baseline; reuse raw predictions and disclose this in metadata.
     baseline_predictions = Path(work_dir)/f"{best['cfg']['name'].lower()}_test.jsonl"
     score_run(high, baseline_predictions, "test", best["state"], data_dir)
@@ -189,13 +211,16 @@ def run_suite(data_dir="data", work_dir="work", bonus=True, steps=None):
                                          "constant_optimizer_steps": 300,
                                          "note": "Smaller dataset is repeated more often; this measures data volume at fixed compute."})
     if bonus:
-        checkpoint, state = train_grpo(best["cfg"], best["checkpoint"], load_config("configs/e5.yaml"), data_dir, work_dir)
+        trained = isolated("grpo", best["cfg"], data_dir, work_dir, checkpoint=best["checkpoint"],
+                           e5_config=load_config("configs/e5.yaml"))
+        checkpoint, state = trained["checkpoint"], trained["state"]
         cfg = state["config"]
         write_json("report/runs/e5.json", state)
         shutil.copy2(Path(work_dir)/"e5/train_log.jsonl", "report/logs/e5.jsonl")
         write_json("report/configs/e5.json", cfg)
-        score_run(cfg, infer(cfg, checkpoint, "val", data_dir, work_dir), "val", state, data_dir)
-        score_run(cfg, infer(cfg, checkpoint, "test", data_dir, work_dir), "test", state, data_dir)
+        for split in ("val", "test"):
+            prediction = isolated("infer", cfg, data_dir, work_dir, checkpoint=checkpoint, split=split)["predictions"]
+            score_run(cfg, prediction, split, state, data_dir)
     write_json("report/suite_complete.json", {"bonus": bonus, "work_dir": str(work_dir),
                                               "selected": best["cfg"]["name"], "status": "completed"})
 

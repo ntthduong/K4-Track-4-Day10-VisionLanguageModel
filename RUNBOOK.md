@@ -27,6 +27,8 @@ SFT hoàn chỉnh gần nhất, optimizer/scheduler/scaler/RNG và cursor dữ l
 JSONL tiếp tục những ảnh còn thiếu. Pointer checkpoint chỉ cập nhật sau khi lưu đủ file.
 E5 dùng checkpoint chuẩn Trainer, lưu riêng projector kế thừa từ SFT.
 Không thay siêu tham số giữa chừng trong cùng run; pipeline sẽ từ chối provenance lệch.
+Mỗi lần train/infer chạy trong process riêng để giải phóng hoàn toàn bộ nhớ GPU/CPU
+trước lần nạp model kế tiếp, tránh tích luỹ bộ nhớ trong kernel notebook.
 
 Checkpoint cần Drive trống đủ chỗ: E2/E3 gồm projector float32 và optimizer state.
 Số phút/VRAM trong evidence lấy từ GPU thật. Không suy luận điểm khi chưa chạy xong.
