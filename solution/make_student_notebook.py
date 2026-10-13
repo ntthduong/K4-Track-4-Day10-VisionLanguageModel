@@ -30,9 +30,11 @@ def build():
        "Chọn **T4 GPU**, chạy các cell lần lượt. Kết quả chỉ xuất hiện sau khi huấn luyện/suy luận thật.\n")
     md("## 0. Môi trường (Colab T4)\nGiải nén source và cài đúng versions của đề.\n")
     payload = base64.b64encode(source_archive()).decode()
+    # Short adjacent literals prevent a very long Monaco syntax-highlighted line.
+    packed_source = "SOURCE_B64 = (\n" + "".join(f"    {payload[i:i+100]!r}\n" for i in range(0, len(payload), 100)) + ")\n"
     code("import base64, io, os, sys, zipfile, subprocess\nfrom pathlib import Path\n"
-         "ROOT = Path('/content/lab_day10')\nROOT.mkdir(exist_ok=True)\n"
-         f"SOURCE_B64 = {payload!r}\n"
+         "ROOT = Path('/content/lab_day10')\nROOT.mkdir(exist_ok=True)\n" +
+         packed_source +
          "with zipfile.ZipFile(io.BytesIO(base64.b64decode(SOURCE_B64))) as z:\n    z.extractall(ROOT)\n"
          "os.chdir(ROOT)\nsys.path.insert(0, str(ROOT))\n"
          "# Put this notebook in ROOT too, so the instructor's notebook-structure test can run.\n"
