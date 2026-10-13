@@ -81,16 +81,18 @@ def read_predictions(path):
     return rows
 
 
-def infer(cfg, checkpoint=None, split="test", data_dir="data", work_dir="work", batch_size=1):
+def infer(cfg, checkpoint=None, split="test", data_dir="data", work_dir="work", batch_size=None):
     import torch
     from peft import PeftModel
+    batch_size = batch_size or cfg.get("inference_batch_size", 1)
     entries = read_jsonl(Path(data_dir)/f"splits/{split}.jsonl")
     out = Path(work_dir) / f"{cfg['name'].lower()}_{split}.jsonl"
     manifest_path = out.with_suffix(".manifest.json")
     manifest = {"config": cfg, "dataset_version": read_json(Path(data_dir)/"splits/meta.json")["dataset_version"],
                 "checkpoint": str(checkpoint) if checkpoint else None,
                 "checkpoint_run": read_json(Path(checkpoint)/"run.json") if checkpoint else None,
-                "split": split, "image_ids": [e["image_id"] for e in entries]}
+                "split": split, "inference_batch_size": batch_size,
+                "image_ids": [e["image_id"] for e in entries]}
     identity = fingerprint(manifest)
     if manifest_path.exists():
         if read_json(manifest_path)["identity"] != identity:
@@ -169,6 +171,7 @@ def run_suite(data_dir="data", work_dir="work", bonus=True, steps=None):
     # Effective batch stays 8; use the documented T4 fallback for every SFT arm.
     for cfg in configs:
         cfg["max_new_tokens"] = 512
+        cfg["inference_batch_size"] = 4
         if "lora" in cfg:
             cfg.update(batch_size=1, grad_accum=8)
             if steps is not None:

@@ -27,6 +27,21 @@ Smoke test không phải kết quả E3 nộp bài; không đưa số liệu nà
 
 ## Phần chưa hoàn thành
 
+### Chạy lại ngày 13/10/2026
+
+Đã xác nhận Tesla T4 và khởi chạy `solution.finish` lúc khoảng 20:27 (UTC+7)
+để chạy đủ E0–E5, báo cáo và đóng gói kết quả. Drive trả lỗi `mount failed`,
+nên lần chạy này lưu tại `/content/Day10_ThuyDuong/` trên ổ runtime trước.
+Pipeline đang tải model; chưa có F1 hoàn chỉnh và chưa xác nhận đạt điểm tối đa.
+Checkpoint cục bộ cần được sao lưu trước khi runtime bị xoá.
+
+Audit dữ liệu phát hiện một nhãn crack cao bằng 0 ở ảnh train `vlcsnap-00058`.
+Chỉ loại nhãn này khỏi target SFT/GRPO, giữ split, count gốc và GT chấm điểm.
+Mọi setup dùng suy luận greedy batch 4, tối đa 512 tokens; SFT batch 1 × accumulation 8.
+Bản sửa đã qua **91 tests, 1 skipped** trên máy local.
+
+### Lần chạy trước
+
 Colab mất runtime trong lần kiểm tra batch 2, rồi báo:
 **“Failed to assign a backend — No backend with GPU available.”**
 Chưa chạy đủ 300 bước/setup, chưa có predictions/F1 E0–E5, chưa có report thực nghiệm
