@@ -3,6 +3,7 @@ import argparse
 import gc
 import json
 import os
+import shutil
 import time
 from pathlib import Path
 
@@ -158,6 +159,11 @@ def run_suite(data_dir="data", work_dir="work", bonus=True, steps=None):
     for cfg in configs:
         write_json(Path("report/configs")/f"{cfg['name'].lower()}.json", cfg)
         checkpoint, state = train_sft(cfg, data_dir, work_dir) if "lora" in cfg else (None, None)
+        if state:
+            write_json(Path("report/runs")/f"{cfg['name'].lower()}.json", state)
+            log_dir = Path("report/logs")
+            log_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(Path(work_dir)/cfg["name"].lower()/"train_log.jsonl", log_dir/f"{cfg['name'].lower()}.jsonl")
         validation = score_run(cfg, infer(cfg, checkpoint, "val", data_dir, work_dir), "val", state, data_dir)
         score_run(cfg, infer(cfg, checkpoint, "test", data_dir, work_dir), "test", state, data_dir)
         runs[cfg["name"]] = {"cfg": cfg, "checkpoint": str(checkpoint) if checkpoint else None,
@@ -171,6 +177,8 @@ def run_suite(data_dir="data", work_dir="work", bonus=True, steps=None):
     for cfg in (low, high):
         write_json(Path("report/configs")/f"{cfg['name'].lower()}.json", cfg)
     checkpoint, state = train_sft(low, data_dir, work_dir)
+    write_json("report/runs/e4_data_size_0.1.json", state)
+    shutil.copy2(Path(work_dir)/low["name"].lower()/"train_log.jsonl", "report/logs/e4_data_size_0.1.jsonl")
     score_run(low, infer(low, checkpoint, "val", data_dir, work_dir), "val", state, data_dir)
     score_run(low, infer(low, checkpoint, "test", data_dir, work_dir), "test", state, data_dir)
     # 100% is exactly the baseline; reuse raw predictions and disclose this in metadata.
@@ -183,6 +191,8 @@ def run_suite(data_dir="data", work_dir="work", bonus=True, steps=None):
     if bonus:
         checkpoint, state = train_grpo(best["cfg"], best["checkpoint"], load_config("configs/e5.yaml"), data_dir, work_dir)
         cfg = state["config"]
+        write_json("report/runs/e5.json", state)
+        shutil.copy2(Path(work_dir)/"e5/train_log.jsonl", "report/logs/e5.jsonl")
         write_json("report/configs/e5.json", cfg)
         score_run(cfg, infer(cfg, checkpoint, "val", data_dir, work_dir), "val", state, data_dir)
         score_run(cfg, infer(cfg, checkpoint, "test", data_dir, work_dir), "test", state, data_dir)
