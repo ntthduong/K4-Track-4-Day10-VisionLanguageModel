@@ -29,15 +29,16 @@ Smoke test không phải kết quả E3 nộp bài; không đưa số liệu nà
 
 ### Chạy lại ngày 13/10/2026
 
-Đã xác nhận Tesla T4 và khởi chạy `solution.finish` lúc khoảng 20:27 (UTC+7)
-để chạy đủ E0–E5, báo cáo và đóng gói kết quả. Drive trả lỗi `mount failed`,
-nên lần chạy này lưu tại `/content/Day10_ThuyDuong/` trên ổ runtime trước.
-Pipeline đang tải model; chưa có F1 hoàn chỉnh và chưa xác nhận đạt điểm tối đa.
-Checkpoint cục bộ cần được sao lưu trước khi runtime bị xoá.
+Đã xác nhận Tesla T4 và mount Drive thành công. Pipeline `solution.finish`
+chạy từ khoảng 20:43 (UTC+7), lưu trực tiếp tại
+`/content/drive/MyDrive/Day10_ThuyDuong/checkpoints`, để chạy đủ E0–E5,
+báo cáo và đóng gói kết quả. Chưa có F1 hoàn chỉnh và chưa xác nhận đạt điểm tối đa.
 
 Audit dữ liệu phát hiện một nhãn crack cao bằng 0 ở ảnh train `vlcsnap-00058`.
 Chỉ loại nhãn này khỏi target SFT/GRPO, giữ split, count gốc và GT chấm điểm.
-Mọi setup dùng suy luận greedy batch 4, tối đa 512 tokens; SFT batch 1 × accumulation 8.
+Mọi setup dùng suy luận greedy batch 16, tối đa 512 tokens; SFT batch 1 × accumulation 8.
+Output E0 chạy thử batch 4 được lưu riêng trong `diagnostic_batch4_*` trên Drive;
+không dùng làm evidence chấm điểm. Bộ thí nghiệm batch 16 chạy mới thống nhất.
 Bản sửa đã qua **91 tests, 1 skipped** trên máy local.
 
 ### Lần chạy trước

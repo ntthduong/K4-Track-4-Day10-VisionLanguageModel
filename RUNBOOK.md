@@ -17,7 +17,7 @@ chỉ được sinh sau khi có đủ bằng chứng thật E0–E5.
 Pipeline: E0 → E1 → E2 → E3 → chọn setup bằng validation → E4 10%/100% → E5.
 Chạy test một lần/setup; đọc validation để chọn baseline. E4 100% dùng lại run baseline
 đúng như GUIDE cho phép. Tất cả SFT dùng batch 1, accumulation 8, 300 bước, cùng seed 42.
-Mọi inference greedy, batch 4 và tối đa 512 tokens; E5 rollout tối đa 128 tokens theo đề.
+Mọi inference greedy, batch 16 và tối đa 512 tokens; E5 rollout tối đa 128 tokens theo đề.
 Loss chỉ trên assistant answer và EOS. Quy ước nhãn/output là xyxy 0–1000.
 
 ## Khi bị ngắt

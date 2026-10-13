@@ -169,7 +169,7 @@ def build_report(data_dir="data", work_dir="work", author="Nguyễn Thị Thùy 
 {chr(10).join(table)}
 
 E0 không huấn luyện nên cột tài nguyên huấn luyện bằng 0. E4 100% tái sử dụng đúng run {selected.upper()}.
-Tất cả SFT dùng batch 1 × tích luỹ 8 = batch hiệu dụng 8, 300 bước; suy luận greedy batch 4, tối đa 512 token cho mọi setup.
+Tất cả SFT dùng batch 1 × tích luỹ 8 = batch hiệu dụng 8, 300 bước; suy luận greedy batch 16, tối đa 512 token cho mọi setup.
 Chọn {selected.upper()} bằng F1 trên toàn bộ validation, tiêu chí và số liệu ở `report/selection.json`.
 
 ## 10 câu hỏi

@@ -171,7 +171,7 @@ def run_suite(data_dir="data", work_dir="work", bonus=True, steps=None):
     # Effective batch stays 8; use the documented T4 fallback for every SFT arm.
     for cfg in configs:
         cfg["max_new_tokens"] = 512
-        cfg["inference_batch_size"] = 4
+        cfg["inference_batch_size"] = 16
         if "lora" in cfg:
             cfg.update(batch_size=1, grad_accum=8)
             if steps is not None:
