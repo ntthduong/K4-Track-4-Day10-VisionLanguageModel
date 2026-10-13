@@ -1,0 +1,6 @@
+# Instructor's pinned training stack remains in requirements-colab.txt.
+-r requirements-colab.txt
+pytest
+datasets
+matplotlib
+kagglehub
