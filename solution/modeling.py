@@ -9,6 +9,7 @@ from solution.core import objects_to_answer, prompt
 
 LLM_TARGET = r"model\.language_model\.layers\.\d+\.(?:self_attn\.(?:q|k|v|o)_proj|mlp\.(?:gate|up|down)_proj)"
 VIT_TARGET = r"model\.visual\.blocks\.\d+\.(?:attn\.(?:qkv|proj)|mlp\.(?:linear_fc1|linear_fc2))"
+UNQUANTIZED_MODULES = ["model.visual", "visual", "lm_head"]
 
 
 def is_projector(name):
@@ -39,14 +40,14 @@ def load_base(cfg):
     quant = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",
                               bnb_4bit_compute_dtype=torch.float16,
                               bnb_4bit_use_double_quant=True,
-                              llm_int8_skip_modules=["visual", "lm_head"])
+                              llm_int8_skip_modules=UNQUANTIZED_MODULES)
     model = Qwen3VLForConditionalGeneration.from_pretrained(
         cfg["model_id"], quantization_config=quant, dtype=torch.float16,
         device_map={"": 0}, attn_implementation="sdpa")
     processor = AutoProcessor.from_pretrained(cfg["model_id"])
     processor.tokenizer.padding_side = "left"
     for name, p in model.named_parameters():
-        if "visual." in name and p.__class__.__name__ == "Params4bit":
+        if ("visual." in name or "lm_head." in name) and p.__class__.__name__ == "Params4bit":
             raise RuntimeError(f"ViT was quantized unexpectedly: {name}")
     return model, processor
 

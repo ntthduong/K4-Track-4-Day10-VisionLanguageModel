@@ -62,3 +62,6 @@ Sau khi có report, dùng checker bài nộp và tests sinh viên; template-test
 
 Đã kiểm tra source wheel đúng versions ghim. TRL 1.9.2 tự cast QLoRA trainables
 sang bf16 khi khởi tạo trainer; mã phục hồi fp32 master weights sau khởi tạo cho T4/fp16.
+Transformers 5.19.0 đối chiếu skip_modules theo prefix/regex từ đầu tên module:
+phải có `model.visual` để giữ cả ViT fp16, không chỉ `visual`. Assertion kiểm tra
+mọi tham số ViT/head sau khi nạp, trước khi bắt đầu bất kỳ thí nghiệm nào.

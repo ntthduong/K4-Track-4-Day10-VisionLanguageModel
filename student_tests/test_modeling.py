@@ -4,6 +4,7 @@ from PIL import Image
 
 from solution.modeling import collate
 from solution.modeling import encode_example
+from solution.modeling import UNQUANTIZED_MODULES
 
 
 def test_collation_masks_padding_and_concatenates_visual_grids():
@@ -39,3 +40,7 @@ def test_loss_mask_includes_answer_and_end_token_only(tmp_path):
             return result
     with pytest.raises(RuntimeError, match="not a prefix"):
         encode_example(entry, BrokenProcessor(), tmp_path, cfg)
+
+
+def test_quantization_exclusions_cover_full_visual_prefix():
+    assert "model.visual" in UNQUANTIZED_MODULES and "lm_head" in UNQUANTIZED_MODULES
