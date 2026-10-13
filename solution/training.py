@@ -222,6 +222,9 @@ def train_grpo(base_cfg, checkpoint, e5_cfg, data_dir="data", work_dir="work"):
             # Save frozen but previously SFT-trained projector, too.
             if base_cfg.get("train_projector"):
                 save_projector(kwargs["model"], target)
+            write_json(target / "resource.json", {
+                "train_minutes": prior_minutes+(time.perf_counter()-start)/60,
+                "peak_vram_gb": max(prior_peak, torch.cuda.max_memory_allocated()/2**30)})
 
         def on_log(self, args, state, control, logs=None, **kwargs):
             if logs:
@@ -248,6 +251,9 @@ def train_grpo(base_cfg, checkpoint, e5_cfg, data_dir="data", work_dir="work"):
             p.data = p.data.float()
     checkpoint_dirs = sorted(run_dir.glob("checkpoint-*"), key=lambda p: int(p.name.split("-")[-1]))
     resume_path = str(checkpoint_dirs[-1]) if checkpoint_dirs else None
+    resource_path = Path(resume_path)/"resource.json" if resume_path else None
+    prior = read_json(resource_path) if resource_path and resource_path.exists() else {}
+    prior_minutes, prior_peak = prior.get("train_minutes", 0.0), prior.get("peak_vram_gb", 0.0)
     if resume_path and base_cfg.get("train_projector"):
         load_projector(model, resume_path, True)
     torch.cuda.reset_peak_memory_stats()
@@ -261,8 +267,8 @@ def train_grpo(base_cfg, checkpoint, e5_cfg, data_dir="data", work_dir="work"):
             save_projector(model, final)
         state = {"name": "E5", "config": cfg, "step": trainer.state.global_step,
                  "trainable_params": sum(p.numel() for p in model.parameters() if p.requires_grad),
-                 "peak_vram_gb": torch.cuda.max_memory_allocated()/2**30,
-                 "train_minutes": (time.perf_counter()-start)/60,
+                 "peak_vram_gb": max(prior_peak, torch.cuda.max_memory_allocated()/2**30),
+                 "train_minutes": prior_minutes+(time.perf_counter()-start)/60,
                  "architecture": architecture, "metrics": result.metrics,
                  "dataset_version": read_json(Path(data_dir)/"splits/meta.json")["dataset_version"],
                  "environment": environment(), "resume_from_checkpoint": resume_path}
