@@ -46,6 +46,11 @@ Không đổi tool chấm để vượt kiểm tra. Test gốc `test_report_temp
 kiểm tra **mẫu** REPORT có placeholder; chạy test đó trước khi sinh report hoàn chỉnh.
 Sau khi có report, dùng checker bài nộp và tests sinh viên; template-test không áp dụng nữa.
 
+Dataset `d10-21e4070301` có một nhãn crack cao bằng 0 trong ảnh train
+`vlcsnap-00058`. Mã bỏ đúng nhãn suy biến này khỏi target SFT/GRPO, giữ hai
+nhãn hợp lệ còn lại của ảnh. Không sửa split, count gốc hoặc GT của scorer.
+`report/data_audit.json` và báo cáo cuối ghi rõ annotation bị loại khỏi target.
+
 ## Nội dung cần hiểu để vấn đáp
 
 - ViT tạo đặc trưng, merger/DeepStack chiếu vào không gian LLM; mỗi setup mở khối nào?

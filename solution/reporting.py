@@ -151,6 +151,12 @@ def build_report(data_dir="data", work_dir="work", author="Nguyễn Thị Thùy 
         table.append("| "+" | ".join(values)+" |")
     arch = read_json(Path(work_dir)/"e1/run.json")["architecture"]
     split_lines = [f"- {s}: {c['images']} ảnh; box {c['boxes']}" for s, c in meta["counts"].items()]
+    if Path("report/data_audit.json").exists():
+        excluded = read_json("report/data_audit.json").get("zero_area_targets_excluded_from_training", [])
+        if excluded:
+            split_lines.append("- Nhãn có diện tích 0 chỉ được bỏ khỏi target SFT/GRPO; "
+                               "split, số box gốc và ground truth chấm điểm giữ nguyên: "
+                               + json.dumps(excluded, ensure_ascii=False))
     weakest = min(CLASSES, key=lambda c: evidence[selected]["per_class"][c]["f1"])
     size_stats = {c: statistics.median(o["yolo"][2]*o["yolo"][3]*100 for e in entries
                                      for o in e["objects"] if o["label"] == c) for c in CLASSES}

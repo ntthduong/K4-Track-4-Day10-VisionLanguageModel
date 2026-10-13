@@ -190,7 +190,7 @@ def train_grpo(base_cfg, checkpoint, e5_cfg, data_dir="data", work_dir="work"):
     from torch.utils.data import Dataset
     from transformers import TrainerCallback
     from trl import GRPOConfig, GRPOTrainer
-    from solution.core import gt_boxes, prompt, reward_function
+    from solution.core import gt_boxes, prompt, reward_function, training_objects
     from solution.modeling import open_image
     cfg = dict(base_cfg, name="E5", base_setup=base_cfg["name"], grpo=e5_cfg["grpo"])
     run_dir = Path(work_dir) / "e5"
@@ -213,7 +213,7 @@ def train_grpo(base_cfg, checkpoint, e5_cfg, data_dir="data", work_dir="work"):
         def __getitem__(self, index):
             e = entries[index]
             return {"prompt": [{"role": "user", "content": prompt()}],
-                    "image": open_image(e, data_dir), "ground_truth": gt_boxes(e["objects"]),
+                    "image": open_image(e, data_dir), "ground_truth": gt_boxes(training_objects(e["objects"])),
                     "image_id": e["image_id"]}
 
     class SaveExtra(TrainerCallback):

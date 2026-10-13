@@ -39,8 +39,23 @@ def yolo_to_box(label, yolo, coord="norm1000", width=640, height=360):
     return {"label": label, "bbox_2d": box}
 
 
+def training_objects(objects):
+    """Exclude zero-area targets only; retain the original split and scoring GT."""
+    result = []
+    for obj in objects:
+        yolo = obj["yolo"]
+        if obj["label"] not in CLASSES or len(yolo) != 4 or not all(
+                math.isfinite(v) and 0 <= v <= 1 for v in yolo):
+            raise ValueError("invalid ground truth annotation")
+        if yolo[2] == 0 or yolo[3] == 0:
+            continue
+        result.append(obj)
+    return result
+
+
 def objects_to_answer(objects, coord="norm1000", width=640, height=360):
-    boxes = [yolo_to_box(o["label"], o["yolo"], coord, width, height) for o in objects]
+    boxes = [yolo_to_box(o["label"], o["yolo"], coord, width, height)
+             for o in training_objects(objects)]
     boxes.sort(key=lambda o: (o["bbox_2d"][1], o["bbox_2d"][0], o["label"], o["bbox_2d"]))
     return json.dumps(boxes, separators=(",", ":"))
 

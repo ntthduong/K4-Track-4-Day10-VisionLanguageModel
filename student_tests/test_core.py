@@ -28,6 +28,17 @@ def test_stable_order_and_empty():
     assert objects_to_answer([]) == "[]"
 
 
+def test_zero_area_training_target_does_not_change_original_scoring_gt():
+    zero = {"label": "crack", "yolo": [0.639062, 0.786111, 0.003125, 0.0]}
+    objects = GT + [zero]
+    assert objects_to_answer(objects) == PERFECT
+    assert objects == GT + [zero]
+    assert len(gt_boxes(objects)) == 2
+    assert gt_boxes(objects)[1]["bbox"][1] == gt_boxes(objects)[1]["bbox"][3]
+    with pytest.raises(ValueError):
+        objects_to_answer([{"label": "alien", "yolo": [0.5, 0.5, 0, 0]}])
+
+
 @pytest.mark.parametrize("yolo", [[0.5, 0.5, 0, 0.1], [float("nan"), 0.5, 0.1, 0.1],
                                   [1.1, 0.5, 0.1, 0.1], [0.5, 0.5, 0.00001, 0.1]])
 def test_invalid_or_collapsed_box_is_loud(yolo):

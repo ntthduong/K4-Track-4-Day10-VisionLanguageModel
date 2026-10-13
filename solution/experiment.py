@@ -20,6 +20,7 @@ from solution.training import train_grpo, train_sft
 def validate_data(data_dir="data"):
     root = Path(data_dir)
     seen_images, seen_sessions, counts = set(), {}, {}
+    degenerate_targets = []
     for split in ("train", "val", "test"):
         rows = read_jsonl(root / f"splits/{split}.jsonl")
         boxes = {c: 0 for c in ("pothole", "crack", "manhole")}
@@ -36,13 +37,18 @@ def validate_data(data_dir="data"):
             objects_to_answer(row["objects"])
             for obj in row["objects"]:
                 boxes[obj["label"]] += 1
+                if obj["yolo"][2] == 0 or obj["yolo"][3] == 0:
+                    degenerate_targets.append({"split": split, "image_id": row["image_id"],
+                                               "annotation": obj})
         counts[split] = {"images": len(rows), "boxes": boxes}
     meta = read_json(root / "splits/meta.json")
     if counts != meta["counts"]:
         raise ValueError("Actual dataset differs from meta counts")
     write_json("report/data_audit.json", {"dataset_version": meta["dataset_version"],
                                          "counts": counts, "n_sessions": len(seen_sessions),
-                                         "session_leakage": False})
+                                         "session_leakage": False,
+                                         "zero_area_targets_excluded_from_training": degenerate_targets,
+                                         "original_split_and_scoring_gt_preserved": True})
     return counts
 
 
