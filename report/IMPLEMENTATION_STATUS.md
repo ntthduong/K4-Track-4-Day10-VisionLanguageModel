@@ -41,6 +41,15 @@ Output E0 chạy thử batch 4 được lưu riêng trong `diagnostic_batch4_*` 
 không dùng làm evidence chấm điểm. Bộ thí nghiệm batch 16 chạy mới thống nhất.
 Bản sửa đã qua **91 tests, 1 skipped** trên máy local.
 
+### Bản chạy Kaggle
+
+`lab_day10_kaggle.ipynb` đã chuẩn bị cho GPU T4 x2, Internet on và Save & Run All.
+E0/E2 dùng GPU 0; E1/E3 dùng GPU 1; E4/E5 chạy sau khi chọn baseline.
+Worker giữ CUDA_VISIBLE_DEVICES riêng, không có hai setup cùng chiếm một GPU.
+Checkpoint và archive kết quả nằm trong output `/kaggle/working/lab_day10/`.
+Mã và scheduler đã qua **97 tests, 1 skipped**. Chưa có kết quả Kaggle thực nghiệm:
+giao diện báo thiếu anti-forgery token khi cập nhật accelerator; đang khôi phục đăng nhập.
+
 ### Lần chạy trước
 
 Colab mất runtime trong lần kiểm tra batch 2, rồi báo:

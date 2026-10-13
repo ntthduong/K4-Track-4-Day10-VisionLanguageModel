@@ -161,12 +161,16 @@ def build_report(data_dir="data", work_dir="work", author="Nguyễn Thị Thùy 
     size_stats = {c: statistics.median(o["yolo"][2]*o["yolo"][3]*100 for e in entries
                                      for o in e["objects"] if o["label"] == c) for c in CLASSES}
     audit = read_json(Path(work_dir)/"e1/run.json")["encoding_audit"]
+    timing_note = (read_json("report/execution_plan.json").get("timing_note", "")
+                   if Path("report/execution_plan.json").exists() else "")
     text = f"""Họ tên: {author}
 `dataset_version`: {meta['dataset_version']}
 
 ## Bảng tổng hợp kết quả thật
 
 {chr(10).join(table)}
+
+{timing_note}
 
 E0 không huấn luyện nên cột tài nguyên huấn luyện bằng 0. E4 100% tái sử dụng đúng run {selected.upper()}.
 Tất cả SFT dùng batch 1 × tích luỹ 8 = batch hiệu dụng 8, 300 bước; suy luận greedy batch 16, tối đa 512 token cho mọi setup.

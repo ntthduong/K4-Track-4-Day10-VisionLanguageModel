@@ -16,11 +16,13 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--work", default="work")
     ap.add_argument("--author", default="Nguyễn Thị Thùy Dương")
+    ap.add_argument("--gpus", nargs="+", type=int)
     args = ap.parse_args()
-    run_suite(work_dir=args.work, bonus=True)
+    run_suite(work_dir=args.work, bonus=True, gpu_devices=args.gpus)
     build_report(work_dir=args.work, author=args.author)
     destination = Path(args.work).resolve().parent
-    shutil.copy2("REPORT.md", destination/"REPORT.md")
+    if Path("REPORT.md").resolve() != (destination/"REPORT.md").resolve():
+        shutil.copy2("REPORT.md", destination/"REPORT.md")
     quality = checks()
     write_json("report/quality_checks.json", [{"passed": ok, "check": message} for ok, message in quality])
     structural = subprocess.run([sys.executable, "scripts/check_submission.py"], text=True, capture_output=True)

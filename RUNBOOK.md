@@ -4,6 +4,19 @@ Mã sinh viên nằm ở `solution/`; giữ nguyên công cụ và tests của �
 `lab_day10.ipynb` là notebook chạy được trên Colab T4. Không có kết quả giả: report
 chỉ được sinh sau khi có đủ bằng chứng thật E0–E5.
 
+## Kaggle T4 x2
+
+Import `lab_day10_kaggle.ipynb`, chọn GPU T4 x2 và Internet on, rồi chọn
+**Save Version → Save & Run All**. Phiên này chạy từ đầu và lưu output khi kết thúc;
+không cần Google Drive. Tải `lab_day10/day10_results.zip` từ Output để đưa về repo.
+Cache model gốc nằm ở `/kaggle/temp/`, không đóng gói trọng số gốc vào output.
+
+Mỗi model dùng một GPU riêng: E0/E2 ở GPU 0, E1/E3 ở GPU 1; E4/E5 chạy sau khi
+chọn baseline bằng full validation. Cấu hình model, dữ liệu, optimizer, batch và
+số bước giữ như Colab. Các worker dùng CUDA_VISIBLE_DEVICES riêng, không sửa
+biến môi trường của process cha. CPU dùng chung, nên không so sánh tốc độ setup
+bằng số phút wall-clock của phiên đồng thời. Cách bố trí ghi trong execution_plan.json.
+
 ## Chạy
 
 1. Mở notebook, chọn T4 GPU. Cell đầu giải nén mã nguồn đã đóng gói trong notebook.

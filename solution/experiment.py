@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from scripts.labcommon import read_jsonl
@@ -153,19 +154,67 @@ def score_run(cfg, predictions, split, state=None, data_dir="data", evidence_dir
     return read_json(output)
 
 
-def isolated(operation, cfg, data_dir, work_dir, **kwargs):
+def isolated(operation, cfg, data_dir, work_dir, gpu_device=None, **kwargs):
     request = {"operation": operation, "config": cfg, "data_dir": str(data_dir),
                "work_dir": str(work_dir), **kwargs}
+    if gpu_device is not None:
+        request["gpu_device"] = gpu_device
     request_id = fingerprint(request)
     directory = Path(work_dir)/"worker_requests"
     path, result_path = directory/f"{request_id}.json", directory/f"{request_id}.result.json"
     request["result_path"] = str(result_path)
     write_json(path, request)
-    subprocess.run([sys.executable, "-u", "-m", "solution.worker", str(path)], check=True)
+    options = {"check": True}
+    if gpu_device is not None:
+        options["env"] = dict(os.environ, CUDA_VISIBLE_DEVICES=str(gpu_device),
+                              TOKENIZERS_PARALLELISM="false", OMP_NUM_THREADS="2")
+    subprocess.run([sys.executable, "-u", "-m", "solution.worker", str(path)], **options)
     return read_json(result_path)
 
 
-def run_suite(data_dir="data", work_dir="work", bonus=True, steps=None):
+def run_setup(cfg, data_dir, work_dir, gpu_device=None):
+    """One setup owns its assigned GPU through training and both evaluations."""
+    write_json(Path("report/configs")/f"{cfg['name'].lower()}.json", cfg)
+    if "lora" in cfg:
+        trained = isolated("train", cfg, data_dir, work_dir, gpu_device=gpu_device)
+        checkpoint, state = trained["checkpoint"], trained["state"]
+    else:
+        checkpoint, state = None, None
+    if state:
+        write_json(Path("report/runs")/f"{cfg['name'].lower()}.json", state)
+        log_dir = Path("report/logs")
+        log_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(Path(work_dir)/cfg["name"].lower()/"train_log.jsonl", log_dir/f"{cfg['name'].lower()}.jsonl")
+    val_prediction = isolated("infer", cfg, data_dir, work_dir, gpu_device=gpu_device,
+                              checkpoint=checkpoint, split="val")["predictions"]
+    validation = score_run(cfg, val_prediction, "val", state, data_dir)
+    test_prediction = isolated("infer", cfg, data_dir, work_dir, gpu_device=gpu_device,
+                               checkpoint=checkpoint, split="test")["predictions"]
+    score_run(cfg, test_prediction, "test", state, data_dir)
+    return {"cfg": cfg, "checkpoint": str(checkpoint) if checkpoint else None,
+            "state": state, "validation": validation}
+
+
+def initial_setups(configs, data_dir, work_dir, gpu_devices=None):
+    devices = list(gpu_devices or [])
+    if len(set(devices)) != len(devices) or any(type(g) is not int or g < 0 for g in devices):
+        raise ValueError("GPU ids must be distinct nonnegative integers")
+    if not devices:
+        return {cfg["name"]: run_setup(cfg, data_dir, work_dir) for cfg in configs}
+    # One long-lived scheduling lane per GPU prevents a fast lane from assigning
+    # its next job to a device that another setup still owns.
+    def lane(device, group):
+        return {cfg["name"]: run_setup(cfg, data_dir, work_dir, device) for cfg in group}
+    with ThreadPoolExecutor(max_workers=len(devices)) as executor:
+        futures = [executor.submit(lane, device, configs[i::len(devices)])
+                   for i, device in enumerate(devices)]
+        runs = {}
+        for future in futures:
+            runs.update(future.result())
+    return runs
+
+
+def run_suite(data_dir="data", work_dir="work", bonus=True, steps=None, gpu_devices=None):
     validate_data(data_dir)
     configs = [load_config(f"configs/e{i}.yaml") for i in range(4)]
     # Effective batch stays 8; use the documented T4 fallback for every SFT arm.
@@ -178,25 +227,14 @@ def run_suite(data_dir="data", work_dir="work", bonus=True, steps=None):
                 cfg["max_steps"] = steps
     if steps is not None:
         raise ValueError("Use individual 'train' for smoke runs; the submission suite requires 300 steps")
-    runs = {}
-    for cfg in configs:
-        write_json(Path("report/configs")/f"{cfg['name'].lower()}.json", cfg)
-        if "lora" in cfg:
-            trained = isolated("train", cfg, data_dir, work_dir)
-            checkpoint, state = trained["checkpoint"], trained["state"]
-        else:
-            checkpoint, state = None, None
-        if state:
-            write_json(Path("report/runs")/f"{cfg['name'].lower()}.json", state)
-            log_dir = Path("report/logs")
-            log_dir.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(Path(work_dir)/cfg["name"].lower()/"train_log.jsonl", log_dir/f"{cfg['name'].lower()}.jsonl")
-        val_prediction = isolated("infer", cfg, data_dir, work_dir, checkpoint=checkpoint, split="val")["predictions"]
-        validation = score_run(cfg, val_prediction, "val", state, data_dir)
-        test_prediction = isolated("infer", cfg, data_dir, work_dir, checkpoint=checkpoint, split="test")["predictions"]
-        score_run(cfg, test_prediction, "test", state, data_dir)
-        runs[cfg["name"]] = {"cfg": cfg, "checkpoint": str(checkpoint) if checkpoint else None,
-                             "state": state, "validation": validation}
+    devices = list(gpu_devices or [])
+    write_json("report/execution_plan.json", {"gpu_devices": devices,
+        "parallel_initial_setups": len(devices) > 1,
+        "timing_note": ("E0–E3 chạy đồng thời trên các GPU riêng, cùng dùng CPU; số phút là wall-clock "
+                        "trong điều kiện đó, không dùng để kết luận chênh lệch tốc độ giữa setup."
+                        if len(devices) > 1 else "Các setup chạy tuần tự; số phút đo trên runtime thực tế.")})
+    runs = initial_setups(configs, data_dir, work_dir, devices)
+    primary_gpu = devices[0] if devices else None
     best = max((runs[f"E{i}"] for i in (1, 2, 3)),
                key=lambda r: (r["validation"]["micro"]["f1"], -r["state"]["trainable_params"]))
     write_json("report/selection.json", {"criterion": "highest full-validation F1, tie: fewer trainable params",
@@ -205,12 +243,13 @@ def run_suite(data_dir="data", work_dir="work", bonus=True, steps=None):
     low, high = ablations(best["cfg"], "data_size")
     for cfg in (low, high):
         write_json(Path("report/configs")/f"{cfg['name'].lower()}.json", cfg)
-    trained = isolated("train", low, data_dir, work_dir)
+    trained = isolated("train", low, data_dir, work_dir, gpu_device=primary_gpu)
     checkpoint, state = trained["checkpoint"], trained["state"]
     write_json("report/runs/e4_data_size_0.1.json", state)
     shutil.copy2(Path(work_dir)/low["name"].lower()/"train_log.jsonl", "report/logs/e4_data_size_0.1.jsonl")
     for split in ("val", "test"):
-        prediction = isolated("infer", low, data_dir, work_dir, checkpoint=checkpoint, split=split)["predictions"]
+        prediction = isolated("infer", low, data_dir, work_dir, gpu_device=primary_gpu,
+                              checkpoint=checkpoint, split=split)["predictions"]
         score_run(low, prediction, split, state, data_dir)
     # 100% is exactly the baseline; reuse raw predictions and disclose this in metadata.
     baseline_predictions = Path(work_dir)/f"{best['cfg']['name'].lower()}_test.jsonl"
@@ -220,7 +259,7 @@ def run_suite(data_dir="data", work_dir="work", bonus=True, steps=None):
                                          "constant_optimizer_steps": 300,
                                          "note": "Smaller dataset is repeated more often; this measures data volume at fixed compute."})
     if bonus:
-        trained = isolated("grpo", best["cfg"], data_dir, work_dir, checkpoint=best["checkpoint"],
+        trained = isolated("grpo", best["cfg"], data_dir, work_dir, gpu_device=primary_gpu, checkpoint=best["checkpoint"],
                            e5_config=load_config("configs/e5.yaml"))
         checkpoint, state = trained["checkpoint"], trained["state"]
         cfg = state["config"]
@@ -228,7 +267,8 @@ def run_suite(data_dir="data", work_dir="work", bonus=True, steps=None):
         shutil.copy2(Path(work_dir)/"e5/train_log.jsonl", "report/logs/e5.jsonl")
         write_json("report/configs/e5.json", cfg)
         for split in ("val", "test"):
-            prediction = isolated("infer", cfg, data_dir, work_dir, checkpoint=checkpoint, split=split)["predictions"]
+            prediction = isolated("infer", cfg, data_dir, work_dir, gpu_device=primary_gpu,
+                                  checkpoint=checkpoint, split=split)["predictions"]
             score_run(cfg, prediction, split, state, data_dir)
     write_json("report/suite_complete.json", {"bonus": bonus, "work_dir": str(work_dir),
                                               "selected": best["cfg"]["name"], "status": "completed"})
@@ -241,6 +281,7 @@ def main():
     suite.add_argument("--data", default="data")
     suite.add_argument("--work", default="work")
     suite.add_argument("--no-bonus", action="store_true")
+    suite.add_argument("--gpus", nargs="+", type=int)
     single = sub.add_parser("train")
     single.add_argument("--config", required=True)
     single.add_argument("--data", default="data")
@@ -249,7 +290,7 @@ def main():
     args = ap.parse_args()
     os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
     if args.command == "suite":
-        run_suite(args.data, args.work, bonus=not args.no_bonus)
+        run_suite(args.data, args.work, bonus=not args.no_bonus, gpu_devices=args.gpus)
     else:
         cfg = load_config(args.config)
         cfg.update(batch_size=1, grad_accum=8)
