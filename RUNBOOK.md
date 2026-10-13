@@ -65,3 +65,5 @@ sang bf16 khi khởi tạo trainer; mã phục hồi fp32 master weights sau kh�
 Transformers 5.19.0 đối chiếu skip_modules theo prefix/regex từ đầu tên module:
 phải có `model.visual` để giữ cả ViT fp16, không chỉ `visual`. Assertion kiểm tra
 mọi tham số ViT/head sau khi nạp, trước khi bắt đầu bất kỳ thí nghiệm nào.
+Colab hiện cài sẵn torchao 0.10.0, không tương thích PEFT 0.21.2. Bootstrap
+gỡ torchao cũ (thư viện tùy chọn không dùng ở đây), giữ torch/torchvision của runtime.

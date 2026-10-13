@@ -38,6 +38,7 @@ def build():
          "# Put this notebook in ROOT too, so the instructor's notebook-structure test can run.\n"
          "from solution.make_student_notebook import build\nbuild()\n"
          "subprocess.run([sys.executable, '-m', 'pip', 'install', '-q', '-r', 'requirements-student.txt'], check=True)\n"
+         "from solution.colab_environment import prepare\nprepare()\n"
          "import torch\nassert torch.cuda.is_available(), 'Runtime → Change runtime type → T4 GPU'\n"
          "print(torch.cuda.get_device_name(0), torch.cuda.get_device_properties(0).total_memory / 2**30, 'GiB')\n")
     code("from google.colab import drive\ndrive.mount('/content/drive')\n"
