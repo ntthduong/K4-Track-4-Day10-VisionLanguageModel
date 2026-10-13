@@ -1,6 +1,9 @@
 import torch
+import pytest
+from PIL import Image
 
 from solution.modeling import collate
+from solution.modeling import encode_example
 
 
 def test_collation_masks_padding_and_concatenates_visual_grids():
@@ -16,3 +19,23 @@ def test_collation_masks_padding_and_concatenates_visual_grids():
     assert batch["attention_mask"].tolist() == [[1, 1, 1], [1, 1, 0]]
     assert batch["pixel_values"].shape == (6, 6)
     assert batch["image_grid_thw"].shape == (2, 3)
+
+
+def test_loss_mask_includes_answer_and_end_token_only(tmp_path):
+    Image.new("RGB", (640, 360)).save(tmp_path/"sample.jpg")
+    entry = {"image_path": "sample.jpg", "width": 640, "height": 360, "objects": []}
+    class Processor:
+        def apply_chat_template(self, messages, **kwargs):
+            ids = [10, 11, 12] if len(messages) == 1 else [10, 11, 12, 20, 21]
+            return {"input_ids": torch.tensor([ids]), "attention_mask": torch.ones(1, len(ids), dtype=torch.long)}
+    cfg = {"coord": "norm1000"}
+    encoded = encode_example(entry, Processor(), tmp_path, cfg)
+    assert encoded["labels"].tolist() == [[-100, -100, -100, 20, 21]]
+    class BrokenProcessor(Processor):
+        def apply_chat_template(self, messages, **kwargs):
+            result = super().apply_chat_template(messages, **kwargs)
+            if len(messages) == 2:
+                result["input_ids"][0, 0] = 99
+            return result
+    with pytest.raises(RuntimeError, match="not a prefix"):
+        encode_example(entry, BrokenProcessor(), tmp_path, cfg)

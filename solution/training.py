@@ -100,12 +100,13 @@ def train_sft(cfg, data_dir="data", work_dir="work", resume=True):
     audit = encoding_audit(entries[0], processor, data_dir, cfg)
     opt = torch.optim.AdamW(params, lr=cfg["lr"], weight_decay=0)
     scheduler = get_cosine_schedule_with_warmup(opt, math.ceil(cfg["max_steps"]*0.05), cfg["max_steps"])
-    scaler = torch.amp.GradScaler("cuda")
+    scaler = torch.amp.GradScaler("cuda", init_scale=128.0)
     state = {"name": cfg["name"], "config": cfg, "run_id": run_id,
              "dataset_version": dataset_meta["dataset_version"], "step": 0, "cursor": 0,
              "trainable_params": sum(p.numel() for p in params), "architecture": architecture,
              "matched_modules": matched, "encoding_audit": audit, "train_minutes": 0.0,
              "peak_vram_gb": 0.0, "n_train_images": len(entries), "environment": environment()}
+    state["model_revision"] = getattr(model.config, "_commit_hash", None)
     if previous:
         state = previous
         # Only load locally produced training state. It includes Python/NumPy RNG tuples.
@@ -122,9 +123,12 @@ def train_sft(cfg, data_dir="data", work_dir="work", resume=True):
     start, elapsed_before = time.perf_counter(), state["train_minutes"]
     model.train()
     opt.zero_grad(set_to_none=True)
+    overflow_retries = 0
     print(f"{cfg['name']}: {state['trainable_params']:,} trainable params, {len(matched)} LoRA modules", flush=True)
     try:
         while state["step"] < cfg["max_steps"]:
+            cursor_before = state["cursor"]
+            rng_before = torch.get_rng_state(), torch.cuda.get_rng_state_all()
             losses = []
             for _ in range(cfg["grad_accum"]):
                 indices, state["cursor"] = batch_indices(len(entries), cfg["batch_size"], state["cursor"], cfg["seed"])
@@ -142,8 +146,20 @@ def train_sft(cfg, data_dir="data", work_dir="work", resume=True):
             scaler.unscale_(opt)
             norm = torch.nn.utils.clip_grad_norm_(params, 1.0)
             if not torch.isfinite(norm):
-                # Do not count a skipped optimizer step as training.
-                raise FloatingPointError("Non-finite gradients; previous complete checkpoint remains available")
+                # Dynamic loss scaling may overflow despite finite forward loss.
+                # Skip the optimizer update, lower scale, and replay the same examples.
+                scaler.step(opt)
+                scaler.update()
+                opt.zero_grad(set_to_none=True)
+                state["cursor"] = cursor_before
+                torch.set_rng_state(rng_before[0])
+                torch.cuda.set_rng_state_all(rng_before[1])
+                overflow_retries += 1
+                print(f"Gradient overflow: retry {overflow_retries}, loss scale={scaler.get_scale()}", flush=True)
+                if overflow_retries >= 8:
+                    raise FloatingPointError("Repeated gradient overflow; previous complete checkpoint remains available")
+                continue
+            overflow_retries = 0
             scaler.step(opt)
             scaler.update()
             scheduler.step()
