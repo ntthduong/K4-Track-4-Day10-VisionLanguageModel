@@ -1,5 +1,6 @@
 """Atomic JSON and checkpoint persistence."""
 import json
+import math
 import os
 from pathlib import Path
 
@@ -22,6 +23,29 @@ def append_jsonl(path, row):
     with path.open("a", encoding="utf-8") as f:
         f.write(json.dumps(row, ensure_ascii=False, allow_nan=False) + "\n")
         f.flush()
+
+
+def append_training_log(path, row):
+    """Preserve undefined telemetry as null; fail explicitly on invalid training metrics."""
+    non_finite = {}
+
+    def clean(value, field):
+        if isinstance(value, float) and not math.isfinite(value):
+            non_finite[field] = str(value)
+            return None
+        if isinstance(value, dict):
+            return {k: clean(v, f'{field}.{k}' if field else k) for k, v in value.items()}
+        if isinstance(value, (list, tuple)):
+            return [clean(v, f'{field}[{i}]') for i, v in enumerate(value)]
+        return value
+
+    sanitized = clean(row, '')
+    if non_finite:
+        sanitized['non_finite_metrics'] = non_finite
+    append_jsonl(path, sanitized)
+    critical = {'loss', 'grad_norm', 'reward', 'rewards/reward_function/mean'} & non_finite.keys()
+    if critical:
+        raise FloatingPointError(f'Non-finite training metrics: {sorted(critical)}; diagnostic row saved to {path}')
 
 
 def save_projector(model, directory):

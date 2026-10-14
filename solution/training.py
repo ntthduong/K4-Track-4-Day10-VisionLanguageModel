@@ -11,7 +11,7 @@ from scripts.labcommon import read_jsonl
 from solution.core import fingerprint, subset_train
 from solution.modeling import (apply_setup, architecture_counts, collate, configure_trainable,
                                encode_example, encoding_audit, load_base)
-from solution.storage import append_jsonl, load_projector, read_json, save_projector, write_json
+from solution.storage import append_jsonl, append_training_log, load_projector, read_json, save_projector, write_json
 
 
 def environment():
@@ -228,7 +228,7 @@ def train_grpo(base_cfg, checkpoint, e5_cfg, data_dir="data", work_dir="work"):
 
         def on_log(self, args, state, control, logs=None, **kwargs):
             if logs:
-                append_jsonl(run_dir / "train_log.jsonl", dict(logs, step=state.global_step))
+                append_training_log(run_dir / "train_log.jsonl", dict(logs, step=state.global_step))
 
     g = cfg["grpo"]
     args = GRPOConfig(output_dir=str(run_dir), max_steps=g["max_steps"],
@@ -239,7 +239,7 @@ def train_grpo(base_cfg, checkpoint, e5_cfg, data_dir="data", work_dir="work"):
                       fp16=True, bf16=False, gradient_checkpointing=True,
                       gradient_checkpointing_kwargs={"use_reentrant": False}, use_vllm=False,
                       remove_unused_columns=False, report_to="none", logging_steps=1,
-                      save_steps=20, save_total_limit=1, seed=cfg["seed"],
+                      save_steps=5, save_total_limit=2, seed=cfg["seed"],
                       dataloader_num_workers=0, optim="adamw_torch", max_grad_norm=1.0)
     trainer = GRPOTrainer(model=model, processing_class=processor, args=args,
                           train_dataset=RoadDataset(), reward_funcs=reward_function,
