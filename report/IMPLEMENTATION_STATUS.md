@@ -2,6 +2,19 @@
 
 ## Kết quả hiện tại — 14/10/2026
 
+Đã bổ sung đủ **sáu ảnh dự đoán E3 kèm GT**, gồm ba F1 ảnh thấp nhất và ba
+cao nhất. File người dùng gửi có đủ 311 predictions; `splits/test.jsonl` gửi
+tiếp theo khớp toàn bộ 311 records dựng từ dataset công khai bằng công cụ gốc.
+Chấm lại khớp chính xác evidence E3, F1=0,43320610687022904, gồm cả CI95,
+TP/FP/FN và tỷ lệ parse. Cùng output chấm sai thang pixel có F1=0.
+Test có 3 phiên; diện tích box GT trung vị đã đo và bổ sung ở câu 9.
+Raw predictions E3 lưu trong `report/predictions/e3_test.jsonl`;
+phân tích ở `report/e3_image_analysis.json`. Dữ liệu gốc/trọng số không commit.
+Checker hiện **0 FAIL, 0 WARN**. Vẫn thiếu raw các setup khác để tính CI
+chênh lệch ghép cặp theo phiên; E5 chưa hoàn tất.
+
+Ghi nhận lần phục hồi số liệu ban đầu dưới đây được giữ làm lịch sử:
+
 Kaggle Version 2 (session `358072033`) đã hoàn tất E0–E4. Sáu evidence test
 đã phục hồi vào repo: E0/E1/E2/E3 và hai mức dữ liệu E4. F1 lần lượt
 0,0706 / 0,2635 / 0,3616 / 0,4332 / 0,2799 (10%) / 0,4332 (100%).

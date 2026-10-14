@@ -12,7 +12,7 @@ E0–E4 đã có kết quả test đầy đủ, không thiếu dự đoán. E1/E
 
 Các file `report/evidence/*.json`, `report/runs/*.json`, `selection.json`, `e4_design.json`, `execution_plan.json` và `data_audit.json` được phục hồi từ phần xem JSON của Output Kaggle. Nội dung 14 file gốc đã được đối chiếu fingerprint JSON chuẩn hoá và khớp toàn bộ; không tự sinh lại điểm từ số log đã làm tròn. Nguồn và giới hạn truy xuất nằm trong [kaggle_provenance.json](report/kaggle_provenance.json).
 
-Kaggle không tải file được do dịch vụ reCAPTCHA và chỉ cho xem một mục trong preview JSONL bị cắt ngắn. Vì vậy bản này có bảng kết quả, phân tích và biểu đồ đầy đủ từ evidence, nhưng **chưa có sáu ảnh dự đoán kèm GT, F1 khi chấm sai tọa độ trên toàn tập, hoặc CI ghép cặp theo phiên**. Những mục đó cần raw predictions, split và ảnh đầy đủ; không dùng số hay ảnh giả để thay thế. Đây chưa phải xác nhận đạt trọn rubric hoặc bonus.
+Đã nhận đủ 311 raw predictions E3 từ file người dùng cung cấp, tải lại dataset công khai và dựng split bằng công cụ gốc. Dataset version, toàn bộ TP/FP/FN, F1, CI95 và tỷ lệ parse khớp evidence E3. Sáu ảnh prediction/GT và phép chấm sai tọa độ trên toàn tập đã được bổ sung. Dự đoán thô E3 lưu ở `report/predictions/e3_test.jsonl`; phân tích và cách chọn ảnh ở `report/e3_image_analysis.json`. Chưa có raw E0/E1/E2/E4 để tính CI chênh lệch ghép cặp giữa các setup theo phiên; E5 chưa hoàn tất.
 
 ## Bảng tổng hợp kết quả thực nghiệm
 
@@ -82,13 +82,13 @@ Mẫu output thô thật tại ảnh `vlcsnap-00200`, lấy từ preview `checkp
 [{"label":"manhole","bbox_2d": [770, 640, 843, 687]}, {"label":"manhole","bbox_2d": [909, 786, 997, 824]}]
 ```
 
-Mẫu này parse được và có hai box manhole. Chưa có GT của ảnh trong local nên không gán nó là ví dụ đúng/sai. E0 kém nhất ở crack: chỉ 3 TP/299 GT, F1=0,0117; pothole 8 TP/121 GT; manhole 23 TP/163 GT.
+Mẫu này parse được và có hai box manhole. Đối chiếu GT của split đã phục hồi: TP=0, FP=2, FN=2, F1 ảnh=0.0000. Đây là một mẫu, không đại diện toàn bộ E0. E0 kém nhất ở crack: chỉ 3 TP/299 GT, F1=0,0117; pothole 8 TP/121 GT; manhole 23 TP/163 GT.
 
 ### Câu 3 — Thang 0–1000 và kiểm chứng
 
 Nhãn và prediction dùng xyxy chuẩn hoá riêng theo chiều rộng/cao. YOLO `(xc,yc,w,h)=(0,5;0,5;0,2;0,2)` trở thành `[400,400,600,600]`; ở ảnh 640×360, box pixel tương ứng `[256,144,384,216]`.
 
-Nếu chấm `[400,400,600,600]` như pixel, scorer nhân x với 1000/640 và y với 1000/360: box trở thành `[625,1111,1117,1667]` (làm tròn ở đây), không khớp GT trên. Kiểm chứng riêng bằng scorer gốc trên một mẫu tổng hợp cho F1 đúng thang=1,0 và sai thang=0,0; kết quả minh hoạ nằm trong `report/coordinate_demo.json` và **không phải evidence E0–E4**. F1 test thực của E3 khi chấm đúng là 0.4332; chưa đo F1 E3 khi cố ý chấm pixel vì cần toàn bộ raw predictions.
+Nếu chấm `[400,400,600,600]` như pixel, scorer nhân x với 1000/640 và y với 1000/360: box trở thành `[625,1111,1117,1667]` (làm tròn ở đây), không khớp GT trên. Kiểm chứng riêng bằng scorer gốc trên một mẫu tổng hợp cho F1 đúng thang=1,0 và sai thang=0,0; kết quả minh hoạ nằm trong `report/coordinate_demo.json` và **không phải evidence E0–E4**. F1 test thực của E3 khi chấm đúng là 0.4332; chấm lại chính 311 output E3 với coord=pixel cho F1 **0.000000**. Đây là phép kiểm chứng thực nghiệm trên cùng output, không chạy lại model.
 
 ### Câu 4 — Mask loss
 
@@ -124,13 +124,13 @@ Trong lần chạy này E3 là lựa chọn hợp lý về chất lượng/VRAM.
 
 E3 có CI95 **[0,3943; 0,4722]**, độ rộng **0.0779** (khoảng 7,79 điểm phần trăm), quanh F1 0,4332. CI của E0/E1/E2 có độ rộng lần lượt 0,0486/0,0771/0,0847. Các CI này do scorer gốc bootstrap theo ảnh, không phải theo phiên.
 
-Frame cùng phiên có tương quan, nên bootstrap ảnh có thể đánh giá thấp bất định. Cần raw prediction và session của từng ảnh để bootstrap ghép cặp theo phiên; bản này chưa có CI đó hay số phiên riêng của test. CI riêng chồng nhau không đủ để kết luận hai setup bằng nhau; CI riêng không chồng cũng không thay thế phép so sánh ghép cặp phù hợp. Một seed và một tập test nhỏ giới hạn khả năng khái quát sang tuyến đường/thành phố khác.
+Frame cùng phiên có tương quan, nên bootstrap ảnh có thể đánh giá thấp bất định. Split test thực tế có **3 phiên**. Đã có raw E3, nhưng vẫn thiếu raw các setup còn lại để tính CI chênh lệch ghép cặp theo phiên. CI riêng chồng nhau không đủ để kết luận hai setup bằng nhau; CI riêng không chồng cũng không thay thế phép so sánh ghép cặp phù hợp. Một seed và một tập test nhỏ giới hạn khả năng khái quát sang tuyến đường/thành phố khác.
 
 ### Câu 9 — Phân tích lỗi theo lớp
 
 Ở E3, pothole có F1 thấp nhất **0,2486**, recall **0,1901**: chỉ tìm đúng 23/121 GT, bỏ sót 98. Crack có 99 TP, 170 FP, 200 FN, F1 **0,3486**; manhole có 105 TP, 27 FP, 58 FN, F1 **0,7119**. Hạn chế chính của pothole là recall; crack còn nhiều cả FP và FN.
 
-Train có 1.074 box pothole, 1.750 crack và 691 manhole; vì vậy không thể giải thích kết quả chỉ bằng số mẫu. Box nhỏ, hình dạng crack dài/mảnh, ánh sáng và độ tương phản là những giả thuyết cần đối chiếu ảnh. Chưa đo diện tích box trung vị hoặc đánh giá trực quan toàn bộ dự đoán; không khẳng định nguyên nhân từ F1 tổng hợp. Biểu đồ trên minh hoạ lỗi theo lớp bằng số, **không thay cho sáu ảnh prediction/GT mà rubric yêu cầu**. Sáu ảnh đó cần được bổ sung sau khi tải raw output và dataset.
+Train có 1.074 box pothole, 1.750 crack và 691 manhole; vì vậy không thể giải thích kết quả chỉ bằng số mẫu. Diện tích box GT trung vị trên test (% ảnh): pothole=0.419%; crack=1.981%; manhole=0.669%. Box nhỏ làm IoU nhạy với sai lệch vị trí; hình dạng crack dài/mảnh và độ tương phản là những giả thuyết cần đối chiếu ảnh, không phải kết luận nhân quả. Sáu ảnh dưới chọn ba F1 thấp nhất và ba F1 cao nhất trên toàn bộ test; khi hoà, sắp theo image ID. Mỗi ảnh có GT xanh, prediction đỏ và TP/FP/FN tính bằng scorer gốc.
 
 ### Câu 10 — E4: lượng dữ liệu với ngân sách bước cố định
 
@@ -140,8 +140,70 @@ F1 test 10% **0.2799**, CI95 **[0,2462; 0,3132]**; 100% **0.4332**, CI95 **[0,39
 
 Loss bước cuối của 10% chỉ **0,014062**, thấp hơn E3 **0,527570**, trong khi F1 test kém hơn. Đây là dấu hiệu phù hợp với quá khớp subset, chưa phải chứng minh nguyên nhân duy nhất. 300×8=2.400 lượt ảnh được dùng; tương đương khoảng 16,90 vòng trên 142 ảnh so với 1,69 vòng trên 1.422 ảnh. Thí nghiệm đo ảnh hưởng lượng dữ liệu với số bước cố định, không giữ số epoch cố định. Hai CI ảnh không chồng hỗ trợ mô tả chênh lệch trong lần chạy; chưa có paired session CI hoặc nhiều seed để khẳng định tổng quát.
 
+## Sáu ảnh dự đoán E3 và nhãn thật
+
+### Ảnh 1 — `vlcsnap-00201`
+
+![E3 prediction và GT: vlcsnap-00201](report/figures/prediction_1.png)
+
+Nhóm F1 thấp nhất; phiên `num-4`. F1 ảnh=0.0000; TP=0, FP=1, FN=2; JSON hợp lệ=True. GT xanh, prediction đỏ.
+
+```json
+[{"label":"crack","bbox_2d":[509,736,659,817]}]
+```
+
+### Ảnh 2 — `vlcsnap-00203`
+
+![E3 prediction và GT: vlcsnap-00203](report/figures/prediction_2.png)
+
+Nhóm F1 thấp nhất; phiên `num-4`. F1 ảnh=0.0000; TP=0, FP=1, FN=1; JSON hợp lệ=True. GT xanh, prediction đỏ.
+
+```json
+[{"label":"crack","bbox_2d":[500,683,684,753]}]
+```
+
+### Ảnh 3 — `vlcsnap-00211`
+
+![E3 prediction và GT: vlcsnap-00211](report/figures/prediction_3.png)
+
+Nhóm F1 thấp nhất; phiên `num-4`. F1 ảnh=0.0000; TP=0, FP=2, FN=2; JSON hợp lệ=True. GT xanh, prediction đỏ.
+
+```json
+[{"label":"crack","bbox_2d":[748,611,809,658]},{"label":"crack","bbox_2d":[894,694,998,761]}]
+```
+
+### Ảnh 4 — `vlcsnap-2025-02-19-17h14m33s249`
+
+![E3 prediction và GT: vlcsnap-2025-02-19-17h14m33s249](report/figures/prediction_4.png)
+
+Nhóm F1 cao nhất; phiên `vlc-2025-02-19-17`. F1 ảnh=1.0000; TP=1, FP=0, FN=0; JSON hợp lệ=True. GT xanh, prediction đỏ.
+
+```json
+[{"label":"manhole","bbox_2d":[384,608,466,653]}]
+```
+
+### Ảnh 5 — `vlcsnap-2025-02-19-17h14m56s176`
+
+![E3 prediction và GT: vlcsnap-2025-02-19-17h14m56s176](report/figures/prediction_5.png)
+
+Nhóm F1 cao nhất; phiên `vlc-2025-02-19-17`. F1 ảnh=1.0000; TP=1, FP=0, FN=0; JSON hợp lệ=True. GT xanh, prediction đỏ.
+
+```json
+[{"label":"manhole","bbox_2d":[389,608,498,672]}]
+```
+
+### Ảnh 6 — `vlcsnap-2025-02-19-17h16m03s525`
+
+![E3 prediction và GT: vlcsnap-2025-02-19-17h16m03s525](report/figures/prediction_6.png)
+
+Nhóm F1 cao nhất; phiên `vlc-2025-02-19-17`. F1 ảnh=1.0000; TP=1, FP=0, FN=0; JSON hợp lệ=True. GT xanh, prediction đỏ.
+
+```json
+[{"label":"pothole","bbox_2d":[297,625,341,667]}]
+```
+
 ## Nhìn lại và phần còn lại
 
 Fine-tuning cải thiện cả định dạng và phát hiện: E0→E3 tăng F1 từ 0,0706 lên 0,4332; JSON hợp lệ từ 72,3473% lên 100%. Tuy vậy E3 vẫn bỏ sót 356/583 GT, nhất là crack và pothole. Scorer chấp nhận một số output có markdown/phần dẫn, nên parse hợp lệ không đồng nghĩa tuân thủ tuyệt đối yêu cầu chỉ JSON.
 
-Trước khi coi bài nộp hoàn chỉnh theo rubric, cần tải raw output để bổ sung sáu ảnh đúng/sai có GT, kiểm chứng sai tọa độ trên toàn tập và paired bootstrap theo phiên. Không đưa ground-truth-only images hoặc smoke test vào bằng chứng dự đoán. E5 là phần riêng còn dang dở; lỗi NaN trong log chưa chứng minh loss/gradient NaN. Bản này chưa yêu cầu chạy lại E0–E4 và không báo hoàn tất bonus.
+Đã bổ sung sáu ảnh prediction/GT và kiểm chứng sai tọa độ trên 311 ảnh E3. Phần phân tích còn thiếu là CI chênh lệch giữa các setup ghép cặp theo phiên, cần raw E0/E1/E2/E4. Sáu ảnh không thay thế việc đánh giá toàn tập. Không đưa ground-truth-only images hoặc smoke test vào bằng chứng dự đoán. E5 là phần riêng còn dang dở; lỗi NaN trong log chưa chứng minh loss/gradient NaN. Bản này chưa yêu cầu chạy lại E0–E4 và không báo hoàn tất bonus.

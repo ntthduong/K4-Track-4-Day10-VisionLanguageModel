@@ -78,7 +78,19 @@
     "location": "solution.training callback on_log -> solution.storage.append_jsonl"
   },
   "unavailable_artifacts": [
-    "Complete raw test predictions and test split/images for coordinate rescoring, session bootstrap and six annotated predictions",
-    "Complete training logs for loss curves"
-  ]
+    "Raw predictions E0/E1/E2/E4 for paired differences by session",
+    "Complete training logs for loss curves",
+    "Completed E5 run and evaluation"
+  ],
+  "e3_recovery": {
+    "prediction_source": "User-provided complete E3 JSONL attachment",
+    "test_split_source": "User-provided Kaggle splits/test.jsonl attachment, all 311 parsed records exactly equal regenerated split",
+    "dataset_source": "Public original Kaggle dataset downloaded through the official API",
+    "dataset_version": "d10-21e4070301",
+    "n_images": 311,
+    "test_split_sha256": "62d262a9fdedb2a23474f9561856d19370927935b3becbf9d71973afa6cf9c08",
+    "prediction_sha256": "43d24d4dfec63410ee5a3d576992569b1a5bcb947f3a127d444ccbe526ac097f",
+    "official_score_matches_e3": true,
+    "six_annotated_predictions_complete": true
+  }
 }

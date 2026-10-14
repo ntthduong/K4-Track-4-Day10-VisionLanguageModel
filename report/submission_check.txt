@@ -7,9 +7,9 @@
 [PASS] e2 meta
 [PASS] e3 meta
 [PASS] dataset_version nhất quán — ['d10-21e4070301']
-[WARN] khớp data/splits/meta.json — không có data/splits/meta.json để đối chiếu
+[PASS] khớp data/splits/meta.json
 [PASS] REPORT.md đã điền — còn chuỗi '<điền'
-[PASS] git commits — 19/5
+[PASS] git commits — 20/5
 [PASS] git forbidden files
 
-0 FAIL, 1 WARN
+0 FAIL, 0 WARN

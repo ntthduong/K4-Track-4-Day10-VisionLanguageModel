@@ -1,0 +1,97 @@
+{
+  "dataset_version": "d10-21e4070301",
+  "n_images": 311,
+  "n_test_sessions": 3,
+  "source_predictions_sha256": "43d24d4dfec63410ee5a3d576992569b1a5bcb947f3a127d444ccbe526ac097f",
+  "official_score_matches_e3": true,
+  "correct_f1": 0.43320610687022904,
+  "same_outputs_scored_as_pixel_f1": 0.0,
+  "e0_preview_micro": {
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "tp": 0,
+    "fp": 2,
+    "fn": 2
+  },
+  "median_gt_box_area_percent": {
+    "pothole": 0.41927008680000005,
+    "crack": 1.9813205034999999,
+    "manhole": 0.6688347743
+  },
+  "samples": [
+    {
+      "image_id": "vlcsnap-00201",
+      "tp": 0,
+      "fp": 1,
+      "fn": 2,
+      "parse_valid": true,
+      "f1": 0.0,
+      "figure": "report/figures/prediction_1.png",
+      "raw": "[{\"label\":\"crack\",\"bbox_2d\":[509,736,659,817]}]",
+      "session": "num-4",
+      "selection": "lowest image F1"
+    },
+    {
+      "image_id": "vlcsnap-00203",
+      "tp": 0,
+      "fp": 1,
+      "fn": 1,
+      "parse_valid": true,
+      "f1": 0.0,
+      "figure": "report/figures/prediction_2.png",
+      "raw": "[{\"label\":\"crack\",\"bbox_2d\":[500,683,684,753]}]",
+      "session": "num-4",
+      "selection": "lowest image F1"
+    },
+    {
+      "image_id": "vlcsnap-00211",
+      "tp": 0,
+      "fp": 2,
+      "fn": 2,
+      "parse_valid": true,
+      "f1": 0.0,
+      "figure": "report/figures/prediction_3.png",
+      "raw": "[{\"label\":\"crack\",\"bbox_2d\":[748,611,809,658]},{\"label\":\"crack\",\"bbox_2d\":[894,694,998,761]}]",
+      "session": "num-4",
+      "selection": "lowest image F1"
+    },
+    {
+      "image_id": "vlcsnap-2025-02-19-17h14m33s249",
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "parse_valid": true,
+      "f1": 1.0,
+      "figure": "report/figures/prediction_4.png",
+      "raw": "[{\"label\":\"manhole\",\"bbox_2d\":[384,608,466,653]}]",
+      "session": "vlc-2025-02-19-17",
+      "selection": "highest image F1"
+    },
+    {
+      "image_id": "vlcsnap-2025-02-19-17h14m56s176",
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "parse_valid": true,
+      "f1": 1.0,
+      "figure": "report/figures/prediction_5.png",
+      "raw": "[{\"label\":\"manhole\",\"bbox_2d\":[389,608,498,672]}]",
+      "session": "vlc-2025-02-19-17",
+      "selection": "highest image F1"
+    },
+    {
+      "image_id": "vlcsnap-2025-02-19-17h16m03s525",
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "parse_valid": true,
+      "f1": 1.0,
+      "figure": "report/figures/prediction_6.png",
+      "raw": "[{\"label\":\"pothole\",\"bbox_2d\":[297,625,341,667]}]",
+      "session": "vlc-2025-02-19-17",
+      "selection": "highest image F1"
+    }
+  ],
+  "selection_policy": "Three lowest and three highest per-image F1, ties by image_id; selected across all 311 test images."
+}

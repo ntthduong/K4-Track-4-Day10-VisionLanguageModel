@@ -208,6 +208,62 @@ Fine-tuning cải thiện cả định dạng và phát hiện: E0→E3 tăng F1
 
 Trước khi coi bài nộp hoàn chỉnh theo rubric, cần tải raw output để bổ sung sáu ảnh đúng/sai có GT, kiểm chứng sai tọa độ trên toàn tập và paired bootstrap theo phiên. Không đưa ground-truth-only images hoặc smoke test vào bằng chứng dự đoán. E5 là phần riêng còn dang dở; lỗi NaN trong log chưa chứng minh loss/gradient NaN. Bản này chưa yêu cầu chạy lại E0–E4 và không báo hoàn tất bonus.
 '''
+    analysis_path = Path('report/e3_image_analysis.json')
+    if analysis_path.exists():
+        analysis = read(analysis_path)
+        assert analysis['official_score_matches_e3']
+        assert analysis['correct_f1'] == e3['micro']['f1']
+        start = text.index('Kaggle không tải file được')
+        end = text.index('## Bảng tổng hợp', start)
+        text = text[:start] + (
+            'Đã nhận đủ 311 raw predictions E3 từ file người dùng cung cấp, tải lại dataset công khai và '
+            'dựng split bằng công cụ gốc. Dataset version, toàn bộ TP/FP/FN, F1, CI95 và tỷ lệ parse '
+            'khớp evidence E3. Sáu ảnh prediction/GT và phép chấm sai tọa độ trên toàn tập đã được bổ sung. '
+            'Dự đoán thô E3 lưu ở `report/predictions/e3_test.jsonl`; phân tích và cách chọn ảnh ở '
+            '`report/e3_image_analysis.json`. Chưa có raw E0/E1/E2/E4 để tính CI chênh lệch ghép cặp '
+            'giữa các setup theo phiên; E5 chưa hoàn tất.\n\n'
+        ) + text[end:]
+        text = text.replace(
+            'chưa đo F1 E3 khi cố ý chấm pixel vì cần toàn bộ raw predictions.',
+            f"chấm lại chính 311 output E3 với coord=pixel cho F1 **{analysis['same_outputs_scored_as_pixel_f1']:.6f}**. "
+            'Đây là phép kiểm chứng thực nghiệm trên cùng output, không chạy lại model.')
+        sample_m = analysis['e0_preview_micro']
+        text = text.replace(
+            'Chưa có GT của ảnh trong local nên không gán nó là ví dụ đúng/sai.',
+            f"Đối chiếu GT của split đã phục hồi: TP={sample_m['tp']}, FP={sample_m['fp']}, "
+            f"FN={sample_m['fn']}, F1 ảnh={sample_m['f1']:.4f}. Đây là một mẫu, không đại diện toàn bộ E0.")
+        text = text.replace(
+            'Cần raw prediction và session của từng ảnh để bootstrap ghép cặp theo phiên; bản này chưa có CI đó hay số phiên riêng của test.',
+            f"Split test thực tế có **{analysis['n_test_sessions']} phiên**. Đã có raw E3, nhưng vẫn thiếu raw "
+            'các setup còn lại để tính CI chênh lệch ghép cặp theo phiên.')
+        start = text.index('Train có 1.074 box pothole')
+        end = text.index('### Câu 10', start)
+        text = text[:start] + (
+            'Train có 1.074 box pothole, 1.750 crack và 691 manhole; vì vậy không thể giải thích '
+            'kết quả chỉ bằng số mẫu. Diện tích box GT trung vị trên test (% ảnh): '
+            + '; '.join(f"{c}={v:.3f}%" for c,v in analysis['median_gt_box_area_percent'].items())
+            + '. Box nhỏ làm IoU nhạy với sai lệch vị trí; hình dạng crack dài/mảnh và độ tương phản '
+            'là những giả thuyết cần đối chiếu ảnh, không phải kết luận nhân quả. Sáu ảnh dưới chọn '
+            'ba F1 thấp nhất và ba F1 cao nhất trên toàn bộ test; khi hoà, sắp theo image ID. '
+            'Mỗi ảnh có GT xanh, prediction đỏ và TP/FP/FN tính bằng scorer gốc.\n\n'
+        ) + text[end:]
+        captions = []
+        for i,sample in enumerate(analysis['samples'], 1):
+            captions.append(
+                f"### Ảnh {i} — `{sample['image_id']}`\n\n"
+                f"![E3 prediction và GT: {sample['image_id']}]({sample['figure']})\n\n"
+                f"{'Nhóm F1 thấp nhất' if i <= 3 else 'Nhóm F1 cao nhất'}; phiên `{sample['session']}`. "
+                f"F1 ảnh={sample['f1']:.4f}; TP={sample['tp']}, FP={sample['fp']}, FN={sample['fn']}; "
+                f"JSON hợp lệ={sample['parse_valid']}. GT xanh, prediction đỏ.\n\n"
+                f"```json\n{sample['raw']}\n```"
+            )
+        text = text.replace('## Nhìn lại và phần còn lại',
+                            '## Sáu ảnh dự đoán E3 và nhãn thật\n\n' + '\n\n'.join(captions) + '\n\n## Nhìn lại và phần còn lại')
+        text = text.replace(
+            'Trước khi coi bài nộp hoàn chỉnh theo rubric, cần tải raw output để bổ sung sáu ảnh đúng/sai có GT, kiểm chứng sai tọa độ trên toàn tập và paired bootstrap theo phiên.',
+            'Đã bổ sung sáu ảnh prediction/GT và kiểm chứng sai tọa độ trên 311 ảnh E3. '
+            'Phần phân tích còn thiếu là CI chênh lệch giữa các setup ghép cặp theo phiên, '
+            'cần raw E0/E1/E2/E4. Sáu ảnh không thay thế việc đánh giá toàn tập.')
     Path('REPORT.md').write_text(text, encoding='utf-8')
     return Path('REPORT.md')
 

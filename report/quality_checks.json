@@ -68,7 +68,7 @@
     "check": "Actual 60 steps: e5"
   },
   {
-    "passed": false,
+    "passed": true,
     "check": "At least six annotated predictions"
   },
   {

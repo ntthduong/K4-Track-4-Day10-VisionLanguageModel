@@ -47,9 +47,9 @@
       "detail": "['d10-21e4070301']"
     },
     {
-      "status": "WARN",
+      "status": "PASS",
       "check": "khớp data/splits/meta.json",
-      "detail": "không có data/splits/meta.json để đối chiếu"
+      "detail": ""
     },
     {
       "status": "PASS",
@@ -59,7 +59,7 @@
     {
       "status": "PASS",
       "check": "git commits",
-      "detail": "19/5"
+      "detail": "20/5"
     },
     {
       "status": "PASS",
@@ -88,7 +88,6 @@
   "unresolved": [
     "Missing actual evidence: e5",
     "Actual 60 steps: e5",
-    "At least six annotated predictions",
     "Actual bonus training log",
     "Paired confidence intervals by session"
   ]
