@@ -10,7 +10,7 @@ from solution.reporting import build_report
 from solution.storage import read_json, write_json
 
 
-def finish(previous, work='checkpoints', data='data'):
+def finish(previous, work='checkpoints', data='data', resume_output=None):
     previous, work = Path(previous), Path(work)
     validate_data(data)
     selection = read_json('report/selection.json')
@@ -40,7 +40,7 @@ def finish(previous, work='checkpoints', data='data'):
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(log, target)
     # Resume an existing E5 checkpoint if the failed output actually contains one.
-    old_e5 = previous/'checkpoints/e5'
+    old_e5 = Path(resume_output or previous)/'checkpoints/e5'
     if old_e5.exists() and not (work/'e5').exists():
         shutil.copytree(old_e5, work/'e5')
     trained = isolated('grpo', cfg, data, work, gpu_device=0, checkpoint=str(checkpoint),
@@ -70,5 +70,6 @@ if __name__ == '__main__':
     parser.add_argument('--previous', required=True)
     parser.add_argument('--work', default='checkpoints')
     parser.add_argument('--data', default='data')
+    parser.add_argument('--resume-output', help='Saved output containing the latest E5 checkpoint')
     args = parser.parse_args()
-    finish(args.previous, args.work, args.data)
+    finish(args.previous, args.work, args.data, args.resume_output)

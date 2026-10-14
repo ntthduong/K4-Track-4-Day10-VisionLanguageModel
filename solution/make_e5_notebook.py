@@ -34,7 +34,7 @@ print(torch.cuda.get_device_name(0))
 subprocess.run([sys.executable, '-m', 'pytest', '-q', 'student_tests/test_training_log.py', 'student_tests/test_core.py'], check=True)
 '''
     run = '''import json
-previous_roots = [p.parent.parent for p in Path('/kaggle/input').rglob('selection.json') if p.parent.name == 'report']
+previous_roots = [p.parent.parent for p in Path('/kaggle/input').rglob('selection.json') if p.parent.name == 'report' and (p.parent.parent/'checkpoints/e3/checkpoint-300').exists()]
 assert len(previous_roots) == 1, f'Attach Full Bonus notebook Version 2 output: {previous_roots}'
 PREVIOUS = previous_roots[0]
 print('PREVIOUS_OUTPUT=', PREVIOUS)
@@ -45,7 +45,10 @@ else:
     data_command = ['--zip', 'https://www.kaggle.com/api/v1/datasets/download/lorenzoarcioni/road-damage-dataset-potholes-cracks-and-manholes']
 subprocess.run([sys.executable, 'scripts/prepare_data.py', *data_command], check=True)
 assert json.loads(Path('data/splits/meta.json').read_text())['dataset_version'] == 'd10-21e4070301'
-subprocess.run([sys.executable, '-u', '-m', 'solution.finish_e5', '--previous', str(PREVIOUS)], check=True)
+resume_roots = sorted({p.parent.parent.parent.parent for p in Path('/kaggle/input').rglob('trainer_state.json') if p.parent.name.startswith('checkpoint-') and p.parent.parent.name == 'e5'})
+resume_options = ['--resume-output', str(resume_roots[-1])] if resume_roots else []
+print('E5_RESUME_OUTPUT=', resume_roots)
+subprocess.run([sys.executable, '-u', '-m', 'solution.finish_e5', '--previous', str(PREVIOUS), *resume_options], check=True)
 '''
     def cell(kind, text):
         result = {'cell_type':kind, 'metadata':{}, 'source':text.splitlines(True)}

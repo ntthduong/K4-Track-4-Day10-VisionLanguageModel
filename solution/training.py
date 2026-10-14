@@ -217,6 +217,17 @@ def train_grpo(base_cfg, checkpoint, e5_cfg, data_dir="data", work_dir="work"):
                     "image_id": e["image_id"]}
 
     class SaveExtra(TrainerCallback):
+        def on_train_begin(self, args, state, control, **kwargs):
+            # Trainer restores scaler state before this event. Cap both fresh and resumed
+            # fp16 runs at the same conservative scale used by our T4 SFT loop.
+            scaler = trainer.accelerator.scaler
+            if scaler is not None:
+                scaling = scaler.state_dict()
+                scaling['scale'] = min(scaling['scale'], 128.0)
+                scaling['_growth_tracker'] = 0
+                scaler.load_state_dict(scaling)
+                print(f'E5 fp16 loss scale={scaler.get_scale()}', flush=True)
+
         def on_save(self, args, state, control, **kwargs):
             target = Path(args.output_dir) / f"checkpoint-{state.global_step}"
             # Save frozen but previously SFT-trained projector, too.
@@ -228,7 +239,10 @@ def train_grpo(base_cfg, checkpoint, e5_cfg, data_dir="data", work_dir="work"):
 
         def on_log(self, args, state, control, logs=None, **kwargs):
             if logs:
-                append_training_log(run_dir / "train_log.jsonl", dict(logs, step=state.global_step))
+                scaler = trainer.accelerator.scaler
+                append_training_log(run_dir / "train_log.jsonl", dict(logs, step=state.global_step,
+                    loss_scale=scaler.get_scale() if scaler is not None else None,
+                    optimizer_step_skipped=trainer.accelerator.optimizer_step_was_skipped))
 
     g = cfg["grpo"]
     args = GRPOConfig(output_dir=str(run_dir), max_steps=g["max_steps"],
@@ -272,6 +286,7 @@ def train_grpo(base_cfg, checkpoint, e5_cfg, data_dir="data", work_dir="work"):
                  "architecture": architecture, "metrics": result.metrics,
                  "dataset_version": read_json(Path(data_dir)/"splits/meta.json")["dataset_version"],
                  "environment": environment(), "resume_from_checkpoint": resume_path}
+        state['fp16_initial_loss_scale_cap'] = 128.0
         write_json(final / "run.json", state)
         write_json(run_dir / "run.json", state)
         return final, state
