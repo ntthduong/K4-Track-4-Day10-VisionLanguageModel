@@ -24,8 +24,8 @@
     "check": "Complete official test evidence: e4_data_size_1.0"
   },
   {
-    "passed": false,
-    "check": "Missing actual evidence: e5"
+    "passed": true,
+    "check": "Complete official test evidence: e5"
   },
   {
     "passed": true,
@@ -64,7 +64,7 @@
     "check": "Actual 300 steps: e4_data_size_0.1"
   },
   {
-    "passed": false,
+    "passed": true,
     "check": "Actual 60 steps: e5"
   },
   {
@@ -72,11 +72,11 @@
     "check": "At least six annotated predictions"
   },
   {
-    "passed": false,
+    "passed": true,
     "check": "Actual bonus training log"
   },
   {
-    "passed": false,
+    "passed": true,
     "check": "Paired confidence intervals by session"
   },
   {

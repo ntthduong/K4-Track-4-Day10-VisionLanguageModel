@@ -1,0 +1,73 @@
+{
+  "notebook_url": "https://www.kaggle.com/code/ntthduong/day10-qwen3vl-thuyduong-e5-stable/notebook",
+  "kaggle_session_id": "358221873",
+  "version": 1,
+  "runtime_seconds": 2355,
+  "archive": "day10_e5_results.zip",
+  "archive_sha256": "2b46409f73fa3dc07a077f1f0a304d2ee4bfbeec6d436a35e7e19346886293ab",
+  "official_scorer_reproduction": {
+    "e0": {
+      "n_predictions": 311,
+      "all_score_fields_match": true
+    },
+    "e1": {
+      "n_predictions": 311,
+      "all_score_fields_match": true
+    },
+    "e2": {
+      "n_predictions": 311,
+      "all_score_fields_match": true
+    },
+    "e3": {
+      "n_predictions": 311,
+      "all_score_fields_match": true
+    },
+    "e4_data_size_0.1": {
+      "n_predictions": 311,
+      "all_score_fields_match": true
+    },
+    "e5": {
+      "n_predictions": 311,
+      "all_score_fields_match": true
+    }
+  },
+  "diagnostics_and_paired_ci_match_kaggle": true,
+  "completed_steps": 60,
+  "training_log_rows": 82,
+  "latest_finite_loss_grad_reward_steps": 60,
+  "resumed_steps_with_scale_128": 55,
+  "historical_non_finite_rows": [
+    {
+      "loss": -0.24873171746730804,
+      "grad_norm": null,
+      "learning_rate": 4.333333333333334e-06,
+      "num_tokens": 14987.0,
+      "completions/mean_length": 54.75,
+      "completions/min_length": 28.0,
+      "completions/max_length": 82.0,
+      "completions/clipped_ratio": 0.0,
+      "completions/mean_terminated_length": 54.75,
+      "completions/min_terminated_length": 28.0,
+      "completions/max_terminated_length": 82.0,
+      "rewards/reward_function/mean": 0.2980501651763916,
+      "rewards/reward_function/std": 0.1961003541946411,
+      "reward": 0.2980501651763916,
+      "reward_std": 0.1961003541946411,
+      "frac_reward_zero_std": 0.0,
+      "entropy": 0.5230450853705406,
+      "clip_ratio/low_mean": 0.0,
+      "clip_ratio/high_mean": 0.0,
+      "clip_ratio/region_mean": 0.0,
+      "clip_ratio/low_min": 0.0,
+      "clip_ratio/high_max": 0.0,
+      "step_time": 19.350924288999977,
+      "epoch": 0.006329113924050633,
+      "step": 9,
+      "non_finite_metrics": {
+        "grad_norm": "nan"
+      }
+    }
+  ],
+  "validation_limit": "Validation raw predictions are not in the ZIP; validation evidence is preserved as downloaded.",
+  "loss_plot_limit": "Only the E5 per-step log was included in the ZIP; E0-E4 final observed losses remain in observed_final_steps.json."
+}

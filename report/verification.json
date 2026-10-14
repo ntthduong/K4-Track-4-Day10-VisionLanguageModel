@@ -1,5 +1,5 @@
 {
-  "scope": "E0-E4 measured-results report; not complete rubric/bonus certification",
+  "scope": "Completed measured E0-E5 report; official test scores reproduced from raw predictions",
   "structural_checks": [
     {
       "status": "PASS",
@@ -59,7 +59,7 @@
     {
       "status": "PASS",
       "check": "git commits",
-      "detail": "20/5"
+      "detail": "23/5"
     },
     {
       "status": "PASS",
@@ -76,19 +76,19 @@
     "report/evidence/e2.json": "49ef4ce68753846ccb6c8d4c4782a5679ac0d6274433e55f203a7c8434a90328",
     "report/evidence/e3.json": "cc7fc768816b1aecfe23a6567437a19f57870249b7979903af9430f1488d80bb",
     "report/evidence/e4_data_size_0.1.json": "3b9014f736d767174378dbe79f5a6502fb70baaca577081e0fa9c38983fb2c58",
-    "report/evidence/e4_data_size_1.0.json": "95fbfcdc27538885b6ac8ed824de053c31b74c10c229cbadcc949ab1cf7fa523"
+    "report/evidence/e4_data_size_1.0.json": "95fbfcdc27538885b6ac8ed824de053c31b74c10c229cbadcc949ab1cf7fa523",
+    "report/evidence/e5.json": "9ffc6e17cfdb8f0267773b44c579e0bf027e9ece5e3976f3e2562f55bcc41ab8"
   },
-  "source_integrity": "14 normalized JSON fingerprints exactly match values read from Kaggle; see kaggle_provenance.json",
-  "validation": "Report builder verifies TP/FP/FN sums, F1 arithmetic, 311 images, 583 GT, versions, run metadata, 300 steps, E4-only data fraction, E4 baseline reuse.",
+  "validation": "Six raw test prediction sets reproduce every official score field; all 60 latest E5 loss/grad_norm/reward rows finite; regenerated paired CI and diagnostics match Kaggle archive.",
+  "provenance": "report/kaggle_provenance.json and report/e5_provenance.json",
   "tests": {
-    "full_suite": "96 passed, 1 skipped, 1 failed",
-    "failure": "test_report_template_has_student_markers_and_ten_questions requires <điền in the unfilled template; completed report intentionally has no placeholder",
-    "applicable_suite": "96 passed, 1 skipped, 1 deselected"
+    "applicable_suite": "101 passed, 1 skipped, 1 deselected",
+    "deselected": "Original template test requires <điền; completed report has no placeholder."
   },
-  "unresolved": [
-    "Missing actual evidence: e5",
-    "Actual 60 steps: e5",
-    "Actual bonus training log",
-    "Paired confidence intervals by session"
+  "unresolved": [],
+  "limits": [
+    "Only 3 test recording sessions, one seed.",
+    "E5 validation raw not included in archive; validation evidence preserved without local rescoring.",
+    "Per-step SFT logs not included in archive; recovered loss plot shows E5 only."
   ]
 }

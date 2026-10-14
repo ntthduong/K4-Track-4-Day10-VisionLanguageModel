@@ -1,0 +1,47 @@
+{
+  "e0_to_e1": {
+    "n_sessions": 3,
+    "delta_ci95": [
+      0.18059275049485435,
+      0.34782608695652173
+    ],
+    "method": "paired bootstrap by recording session; delta = B - A",
+    "n_boot": 2000
+  },
+  "e1_to_e2": {
+    "n_sessions": 3,
+    "delta_ci95": [
+      0.07770582793709535,
+      0.12744593452906966
+    ],
+    "method": "paired bootstrap by recording session; delta = B - A",
+    "n_boot": 2000
+  },
+  "e2_to_e3": {
+    "n_sessions": 3,
+    "delta_ci95": [
+      0.06943042251281845,
+      0.09620721554116551
+    ],
+    "method": "paired bootstrap by recording session; delta = B - A",
+    "n_boot": 2000
+  },
+  "e4_data_size_0.1_to_e4_data_size_1.0": {
+    "n_sessions": 3,
+    "delta_ci95": [
+      0.13599517630442143,
+      0.19446640316205527
+    ],
+    "method": "paired bootstrap by recording session; delta = B - A",
+    "n_boot": 2000
+  },
+  "e3_to_e5": {
+    "n_sessions": 3,
+    "delta_ci95": [
+      -0.003946438225142401,
+      0.05603864734299524
+    ],
+    "method": "paired bootstrap by recording session; delta = B - A",
+    "n_boot": 2000
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "e0": {
+    "invalid_json_images": 86,
+    "empty_output_images": 2,
+    "unknown_label_boxes": 0,
+    "boxes_at_least_half_image": 2,
+    "mean_test_iou_reward": 0.1813002643245794
+  },
+  "e3": {
+    "invalid_json_images": 0,
+    "empty_output_images": 0,
+    "unknown_label_boxes": 0,
+    "boxes_at_least_half_image": 0,
+    "mean_test_iou_reward": 0.4576720141948324
+  },
+  "e5": {
+    "invalid_json_images": 0,
+    "empty_output_images": 0,
+    "unknown_label_boxes": 0,
+    "boxes_at_least_half_image": 0,
+    "mean_test_iou_reward": 0.4659125976685738
+  },
+  "wrong_coordinate_scoring": {
+    "correct_f1": 0.43320610687022904,
+    "same_raw_outputs_scored_as_pixel_f1": 0.0
+  }
+}

@@ -114,7 +114,8 @@ def build_report(data_dir="data", work_dir="work", author="Nguyễn Thị Thùy 
         stats = annotate(e, raw[selected][e["image_id"]], data_dir, dest)
         captions.append(f"![{stats['image_id']}]({dest.as_posix()})\n\n"
                         f"Ảnh {i+1}: TP={stats['tp']}, FP={stats['fp']}, FN={stats['fn']}, "
-                        f"F1 riêng ảnh={f1:.3f}. Box xanh là nhãn thật; đỏ là dự đoán.")
+                        f"F1 riêng ảnh={f1:.3f}. Box xanh là nhãn thật; đỏ là dự đoán.\n\n"
+                        f"```json\n{raw[selected][e['image_id']]}\n```")
     # Resource/loss curves are drawn only from observed logs.
     import matplotlib
     matplotlib.use("Agg")
@@ -140,7 +141,7 @@ def build_report(data_dir="data", work_dir="work", author="Nguyễn Thị Thùy 
     fig.tight_layout()
     fig.savefig("report/figures/learning_and_f1.png", dpi=160)
     plt.close(fig)
-    table = ["| Mã | Tham số học | VRAM GB | Phút | F1 | CI95 | FP/ảnh | pothole | crack | manhole |",
+    table = ["| Mã | Tham số học | VRAM GiB | Phút | F1 | CI95 | FP/ảnh | pothole | crack | manhole |",
              "|---|---:|---:|---:|---:|---|---:|---:|---:|---:|"]
     for n in sorted(evidence):
         d, m = evidence[n], evidence[n].get("meta", {})
@@ -163,8 +164,27 @@ def build_report(data_dir="data", work_dir="work", author="Nguyễn Thị Thùy 
     audit = read_json(Path(work_dir)/"e1/run.json")["encoding_audit"]
     timing_note = (read_json("report/execution_plan.json").get("timing_note", "")
                    if Path("report/execution_plan.json").exists() else "")
-    text = f"""Họ tên: {author}
+    e5_run = read_json('report/runs/e5.json')
+    e5_val = read_json('report/validation/e5.json')
+    delta = evidence['e5']['micro']['f1'] - evidence[selected]['micro']['f1']
+    ci_e5 = paired[f'{selected}_to_e5']['delta_ci95']
+    conclusion = ('CI chứa 0: chưa có bằng chứng cải thiện F1 rõ ràng trên các phiên test đã quan sát.'
+                  if ci_e5[0] <= 0 <= ci_e5[1] else
+                  'CI không chứa 0; dấu của CI cho biết hướng chênh lệch trên các phiên test đã quan sát.')
+    text = f"""# Báo cáo Lab Day 10 — kết quả E0–E5
+
+Họ tên: {author}
 `dataset_version`: {meta['dataset_version']}
+
+## Phạm vi và nguồn bằng chứng
+
+E0–E4 hoàn tất; E5 GRPO hoàn tất 60 bước, validation 276 ảnh và test 311 ảnh, không thiếu dự đoán test.
+Nguồn E0–E4: [Full Bonus Version 2](https://www.kaggle.com/code/ntthduong/day10-qwen3vl-thuyduong-full-bonus/notebook), session `358072033`.
+Nguồn E5: [E5 Stable Version 1](https://www.kaggle.com/code/ntthduong/day10-qwen3vl-thuyduong-e5-stable/notebook), session `358221873`, runtime 39 phút 15 giây.
+Raw predictions của E0/E1/E2/E3/E4 10%/E5 đã được tải trong ZIP và chấm lại local bằng scorer gốc:
+mọi trường điểm, TP/FP/FN, CI95 và parse rate khớp evidence. E4 100% dùng lại raw E3.
+Chi tiết nguồn và kiểm chứng ở `report/kaggle_provenance.json`, `report/e5_provenance.json`;
+raw test được giữ tại `report/predictions/`. Validation E5 được giữ nguyên từ ZIP; ZIP không chứa raw validation để chấm lại local.
 
 ## Bảng tổng hợp kết quả thật
 
@@ -173,8 +193,12 @@ def build_report(data_dir="data", work_dir="work", author="Nguyễn Thị Thùy 
 {timing_note}
 
 E0 không huấn luyện nên cột tài nguyên huấn luyện bằng 0. E4 100% tái sử dụng đúng run {selected.upper()}.
+VRAM là peak CUDA memory allocated (bytes/2³⁰), không phải tổng bộ nhớ reserved. Số phút E5 cộng phần checkpoint đã lưu và phiên resume thành công; không gồm thời gian các lần chạy thất bại ngoài checkpoint, tải model hoặc suy luận.
 Tất cả SFT dùng batch 1 × tích luỹ 8 = batch hiệu dụng 8, 300 bước; suy luận greedy batch 16, tối đa 512 token cho mọi setup.
 Chọn {selected.upper()} bằng F1 trên toàn bộ validation, tiêu chí và số liệu ở `report/selection.json`.
+E5 validation F1={e5_val['micro']['f1']:.6f}, parse rate={e5_val['parse_valid_rate']:.6f};
+E3 validation F1={read_json('report/selection.json')['validation_f1'][selected.upper()]:.6f}.
+E5 là bonus cố định 60 bước; không thay baseline được chọn bằng validation chỉ vì F1 test nhỉnh hơn.
 
 ## 10 câu hỏi
 
@@ -243,13 +267,28 @@ Do giữ 300 bước, 10% được lặp nhiều lần hơn; kết luận đo l�
 
 ## Bonus E5 — GRPO và reward hacking
 Khởi tạo từ adapter {selected.upper()}, projector SFT giữ cố định; 4 generations, 128 completion tokens, 60 bước, không vLLM.
+Chỉ LoRA LLM/ViT tiếp tục học ({e5_run['trainable_params']:,} tham số); projector có trọng số SFT được lưu/nạp riêng nhưng đóng băng.
+GRPO LR=5e-6, beta=0, batch 1 × tích luỹ 4, seed=42. Các trường LR/batch/max_steps SFT được kế thừa trong config;
+cấu hình GRPO thực thi nằm trong `config.grpo` và `solution/training.py`.
+Run resume từ `{e5_run['resume_from_checkpoint']}`; loss scale fp16 giới hạn 128 sau khi nạp scaler.
+Log giữ cả dòng grad_norm=NaN bước 9 của phiên thất bại, rồi các bước chạy lại. Dùng giá trị mới nhất theo step:
+đủ 60 bước có loss/grad_norm/reward hữu hạn; các bước resume 6–60 đều ghi optimizer_step_skipped=false, scale=128.
+Loss tổng kết do Trainer báo={e5_run['metrics']['train_loss']:.6f}; loss bước 60=0 với reward_std=0,
+phù hợp advantage trong nhóm bằng 0, không phải dấu hiệu học hoàn hảo. Không so sánh loss GRPO trực tiếp với cross-entropy SFT.
 Reward: JSON lỗi=0; GT/pred cùng rỗng=1; còn lại 0.2+0.8×tổng IoU ghép cùng lớp đạt 0.5/max(nGT,nPred,1).
 Test reward bao gồm hoàn hảo, JSON lỗi, sai lớp, thừa box, rỗng, nhãn lạ, và box khổng lồ.
 Trước GRPO: {diagnoses[selected]}. Sau GRPO: {diagnoses['e5']}.
 F1 SFT={evidence[selected]['micro']['f1']:.4f}, E5={evidence['e5']['micro']['f1']:.4f};
 CI delta={paired[f'{selected}_to_e5']['delta_ci95']}.
+Chênh lệch điểm F1={delta:+.6f} (khoảng {delta*100:+.3f} điểm phần trăm). {conclusion}
+TP tăng từ {evidence[selected]['micro']['tp']} lên {evidence['e5']['micro']['tp']}; FP giảm từ {evidence[selected]['micro']['fp']} xuống {evidence['e5']['micro']['fp']};
+FN từ {evidence[selected]['micro']['fn']} xuống {evidence['e5']['micro']['fn']}. Pothole/manhole F1 tăng nhẹ, crack giảm;
+không kết luận mọi lớp đều được cải thiện.
+Mean test reward tăng từ {diagnoses[selected]['mean_test_iou_reward']:.6f} lên {diagnoses['e5']['mean_test_iou_reward']:.6f}.
+Không quan sát output rỗng, nhãn lạ hoặc box chiếm ít nhất nửa ảnh ở E3/E5 trên test; chưa thấy các kiểu hacking này.
+Reward 0.2 cho JSON hợp lệ nhưng sai toàn bộ vẫn là tín hiệu định dạng, không đảm bảo phát hiện đúng. Các kiểm tra trên không loại trừ mọi dạng reward hacking.
 Reward tăng nhưng F1 không tăng, hoặc tỷ lệ output rỗng/box khổng lồ tăng, là tín hiệu cần điều tra; không kết luận hacking chỉ từ một con số.
-128 token có thể cắt output ảnh nhiều box; xem parse_valid_rate và raw outputs khi giải thích.
+128 token là giới hạn rollout khi train GRPO, có thể cắt output ảnh nhiều box; chấm validation/test vẫn greedy tối đa 512 token như SFT.
 
 ## Output E0 thực tế (5 mẫu)
 
@@ -262,6 +301,8 @@ Reward tăng nhưng F1 không tăng, hoặc tỷ lệ output rỗng/box khổng 
 {chr(10).join(captions)}
 
 ![Loss và F1](report/figures/learning_and_f1.png)
+
+ZIP chứa per-step log E5; biểu đồ loss ở bản phục hồi local chỉ vẽ E5. Loss bước cuối E1–E4 đã quan sát được giữ trong `report/observed_final_steps.json`.
 
 ## Nhìn lại
 Kết quả là một seed trên dữ liệu hữu hạn; chưa đo độ biến thiên giữa nhiều seed hoặc nhiều thành phố.

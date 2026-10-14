@@ -51,7 +51,11 @@ def test_report_is_built_from_fixture_evidence_with_six_images(tmp_path, monkeyp
         for image_id, raw in predictions.items():
             append_jsonl(f"work/{name}_test.jsonl", {"image_id": image_id, "raw": raw})
         append_jsonl(f"work/{name}/train_log.jsonl", {"step": 1, "loss": 1})
-    write_json("report/selection.json", {"selected": "E1"})
+    write_json("report/selection.json", {"selected": "E1", "validation_f1": {"E1": .5}})
+    write_json("report/runs/e5.json", {"trainable_params": 10,
+                                     "resume_from_checkpoint": "fixture/checkpoint-5",
+                                     "metrics": {"train_loss": .1}})
+    write_json("report/validation/e5.json", {"micro": {"f1": .5}, "parse_valid_rate": 1})
     write_json("report/configs/e1.json", {"coord": "norm1000"})
     write_json("work/e1/run.json", {"architecture": {"vit_without_projector": 1, "projector": 2,
                                                      "llm_and_head": 3, "total": 6},
@@ -62,3 +66,4 @@ def test_report_is_built_from_fixture_evidence_with_six_images(tmp_path, monkeyp
     assert "Test Fixture" in content and "test-fixture-only" in content and "<điền" not in content
     assert len(list((tmp_path/"report/figures").glob("prediction_*.png"))) == 6
     assert (tmp_path/"report/figures/learning_and_f1.png").exists()
+    assert "CI chứa 0" in content  # Identical predictions must not imply a proven gain.
