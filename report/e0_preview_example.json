@@ -1,0 +1,6 @@
+{
+  "source_file": "checkpoints/e0_test.jsonl",
+  "preview_truncated": true,
+  "image_id": "vlcsnap-00200",
+  "raw": "[{\"label\":\"manhole\",\"bbox_2d\": [770, 640, 843, 687]}, {\"label\":\"manhole\",\"bbox_2d\": [909, 786, 997, 824]}]"
+}

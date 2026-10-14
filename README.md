@@ -8,7 +8,7 @@
 | `README.md` (file này) | Bức tranh toàn lab, dữ liệu, môi trường, cách nộp |
 | [`GUIDE.md`](GUIDE.md) | Từng bước + pseudo code + câu hỏi |
 | [`RUBRIC.md`](RUBRIC.md) | Thang điểm 100 (+10) |
-| [`REPORT.md`](REPORT.md) | Mẫu báo cáo 10 câu |
+| [`REPORT.md`](REPORT.md) | Báo cáo kết quả E0–E4 trên Kaggle, 10 câu và giới hạn bằng chứng |
 | `lab_day10.ipynb` | Khung notebook để bạn điền mã |
 | `configs/e0…e5.yaml` | Siêu tham số từng thí nghiệm |
 | `scripts/prepare_data.py` | Tải dữ liệu, chia split |

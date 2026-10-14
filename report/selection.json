@@ -1,0 +1,10 @@
+{
+  "criterion": "highest full-validation F1, tie: fewer trainable params",
+  "selected": "E3",
+  "validation_f1": {
+    "E0": 0.03879728419010669,
+    "E2": 0.2842197035745423,
+    "E1": 0.18181818181818182,
+    "E3": 0.3457216940363008
+  }
+}

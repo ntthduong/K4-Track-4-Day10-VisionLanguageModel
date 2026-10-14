@@ -1,0 +1,11 @@
+{
+  "variable": "data_size",
+  "values": [
+    0.1,
+    1
+  ],
+  "baseline": "E3",
+  "reused_100pct_baseline": true,
+  "constant_optimizer_steps": 300,
+  "note": "Smaller dataset is repeated more often; this measures data volume at fixed compute."
+}

@@ -1,0 +1,86 @@
+[
+  {
+    "passed": true,
+    "check": "Complete official test evidence: e0"
+  },
+  {
+    "passed": true,
+    "check": "Complete official test evidence: e1"
+  },
+  {
+    "passed": true,
+    "check": "Complete official test evidence: e2"
+  },
+  {
+    "passed": true,
+    "check": "Complete official test evidence: e3"
+  },
+  {
+    "passed": true,
+    "check": "Complete official test evidence: e4_data_size_0.1"
+  },
+  {
+    "passed": true,
+    "check": "Complete official test evidence: e4_data_size_1.0"
+  },
+  {
+    "passed": false,
+    "check": "Missing actual evidence: e5"
+  },
+  {
+    "passed": true,
+    "check": "E1 parse_valid_rate >= 0.95"
+  },
+  {
+    "passed": true,
+    "check": "E1 F1 exceeds E0 by at least 0.10"
+  },
+  {
+    "passed": true,
+    "check": "All experiments use one dataset_version"
+  },
+  {
+    "passed": true,
+    "check": "Both E4 data-size levels"
+  },
+  {
+    "passed": true,
+    "check": "E4 changes only dataset fraction"
+  },
+  {
+    "passed": true,
+    "check": "Actual 300 steps: e1"
+  },
+  {
+    "passed": true,
+    "check": "Actual 300 steps: e2"
+  },
+  {
+    "passed": true,
+    "check": "Actual 300 steps: e3"
+  },
+  {
+    "passed": true,
+    "check": "Actual 300 steps: e4_data_size_0.1"
+  },
+  {
+    "passed": false,
+    "check": "Actual 60 steps: e5"
+  },
+  {
+    "passed": false,
+    "check": "At least six annotated predictions"
+  },
+  {
+    "passed": false,
+    "check": "Actual bonus training log"
+  },
+  {
+    "passed": false,
+    "check": "Paired confidence intervals by session"
+  },
+  {
+    "passed": true,
+    "check": "Report uses measured results"
+  }
+]

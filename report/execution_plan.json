@@ -1,0 +1,8 @@
+{
+  "gpu_devices": [
+    0,
+    1
+  ],
+  "parallel_initial_setups": true,
+  "timing_note": "E0–E3 chạy đồng thời trên các GPU riêng, cùng dùng CPU; số phút là wall-clock trong điều kiện đó, không dùng để kết luận chênh lệch tốc độ giữa setup."
+}

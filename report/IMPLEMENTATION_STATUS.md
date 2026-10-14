@@ -1,5 +1,28 @@
 # Trạng thái thực hiện — Nguyễn Thị Thùy Dương
 
+## Kết quả hiện tại — 14/10/2026
+
+Kaggle Version 2 (session `358072033`) đã hoàn tất E0–E4. Sáu evidence test
+đã phục hồi vào repo: E0/E1/E2/E3 và hai mức dữ liệu E4. F1 lần lượt
+0,0706 / 0,2635 / 0,3616 / 0,4332 / 0,2799 (10%) / 0,4332 (100%).
+E3 được chọn bằng full validation F1=0,3457; E4 100% tái dùng E3.
+Bốn run SFT hoàn tất 300 bước; metadata, cấu hình, audit mask/dữ liệu và
+nguồn Kaggle được lưu trong `report/`. Nội dung 14 file JSON nguồn đã
+đối chiếu fingerprint chuẩn hoá và khớp dữ liệu xem trực tiếp trên Kaggle.
+
+`REPORT.md` đã có 10 câu, bảng tài nguyên/F1/CI95, phân tích E4 và biểu đồ
+`report/figures/e0_e4_results.png`. Tạo lại bằng `python -m solution.report_e0_e4`.
+E5 dừng ở bước 18/60 do ghi log NaN; chưa có evidence E5.
+Kaggle download bị lỗi dịch vụ reCAPTCHA; preview JSONL bị cắt ngắn.
+Chưa có toàn bộ raw predictions, split và ảnh local để tạo sáu ảnh prediction/GT,
+chấm lại sai tọa độ trên toàn tập hoặc bootstrap ghép cặp theo phiên.
+Không khẳng định đã đạt trọn rubric hay bonus.
+
+Checker gốc: 0 FAIL, 1 WARN (không có `data/splits/meta.json` local).
+Test yêu cầu REPORT còn placeholder là test cho mẫu trước khi điền báo cáo,
+được giữ nguyên; kết quả kiểm tra chi tiết nằm trong `report/verification.json`.
+Các phần dưới là lịch sử chuẩn bị và tiến trình trước khi phục hồi kết quả.
+
 ## Đã triển khai
 
 - Notebook Colab tự chứa source: E0, E1, E2, E3, E4 (10%/100% dữ liệu), E5 GRPO.
@@ -42,6 +65,25 @@ không dùng làm evidence chấm điểm. Bộ thí nghiệm batch 16 chạy m�
 Bản sửa đã qua **91 tests, 1 skipped** trên máy local.
 
 ### Bản chạy Kaggle
+
+### Cập nhật ngày 14/10/2026
+
+Đã import notebook đầy đủ vào
+[Day10 Qwen3VL ThuyDuong Full Bonus](https://www.kaggle.com/code/ntthduong/day10-qwen3vl-thuyduong-full-bonus).
+Accelerator GPU T4 x2 và Internet on đã được Kaggle chấp nhận.
+Version 1 dừng ở tải dữ liệu vì kagglehub không gắn được dataset mới trong phiên batch.
+Đã gắn dataset công khai của đề bằng Add Input và khởi chạy Version 2
+`E0-E5 Full Bonus - dataset attached` bằng Save & Run All.
+
+Log Version 2 xác nhận Tesla T4 14,56 GiB, 97 tests passed / 1 skipped,
+dataset `d10-21e4070301` với 1.422 train / 276 val / 311 test.
+Model đã tải xong; E1 có 33.030.144 tham số học, 252 module LoRA.
+Bước huấn luyện E1 đầu tiên: loss 1,0814617, grad norm 2,5775087,
+peak allocated VRAM 4,4706826 GiB. Đây là log tiến trình, chưa phải evidence
+hoàn chỉnh để chấm điểm. Phiên vẫn đang chạy khi ghi trạng thái;
+chưa có F1 E0–E5 và chưa thể xác nhận đạt 100 + 10 bonus.
+
+Các ghi chú chuẩn bị dưới đây mô tả trạng thái trước Version 2.
 
 `lab_day10_kaggle.ipynb` đã chuẩn bị cho GPU T4 x2, Internet on và Save & Run All.
 E0/E2 dùng GPU 0; E1/E3 dùng GPU 1; E4/E5 chạy sau khi chọn baseline.

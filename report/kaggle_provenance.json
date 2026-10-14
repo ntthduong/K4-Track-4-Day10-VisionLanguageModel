@@ -1,0 +1,84 @@
+{
+  "notebook_url": "https://www.kaggle.com/code/ntthduong/day10-qwen3vl-thuyduong-full-bonus/notebook",
+  "output_url": "https://www.kaggle.com/code/ntthduong/day10-qwen3vl-thuyduong-full-bonus/output",
+  "version": 2,
+  "session_id": 358072033,
+  "retrieved_on": "2026-10-14",
+  "method": "Read rendered Kaggle JSON previews via authenticated browser; transcribed structured values without changing score evidence. Compared canonical JSON content fingerprints for all 14 source files.",
+  "fingerprint_method": "Sorted object keys, JSON.stringify, FNV-1a over UTF-16 code units; integrity comparison, not a cryptographic signature.",
+  "verified_files": {
+    "report/evidence/e0.json": {
+      "characters": 870,
+      "fnv1a32": "fb9a7dec"
+    },
+    "report/evidence/e1.json": {
+      "characters": 938,
+      "fnv1a32": "3fc1d7a9"
+    },
+    "report/evidence/e2.json": {
+      "characters": 927,
+      "fnv1a32": "17560842"
+    },
+    "report/evidence/e3.json": {
+      "characters": 927,
+      "fnv1a32": "f1e923e0"
+    },
+    "report/evidence/e4_data_size_0.1.json": {
+      "characters": 974,
+      "fnv1a32": "2b503fae"
+    },
+    "report/evidence/e4_data_size_1.0.json": {
+      "characters": 957,
+      "fnv1a32": "63424a9b"
+    },
+    "report/runs/e1.json": {
+      "characters": 13715,
+      "fnv1a32": "90526226"
+    },
+    "report/runs/e2.json": {
+      "characters": 13742,
+      "fnv1a32": "c1a93ff3"
+    },
+    "report/runs/e3.json": {
+      "characters": 17259,
+      "fnv1a32": "30d7c9f3"
+    },
+    "report/runs/e4_data_size_0.1.json": {
+      "characters": 16979,
+      "fnv1a32": "1ab6f297"
+    },
+    "report/selection.json": {
+      "characters": 203,
+      "fnv1a32": "6f365db8"
+    },
+    "report/e4_design.json": {
+      "characters": 211,
+      "fnv1a32": "9920b3d1"
+    },
+    "report/execution_plan.json": {
+      "characters": 219,
+      "fnv1a32": "21fa5743"
+    },
+    "report/data_audit.json": {
+      "characters": 511,
+      "fnv1a32": "49022af4"
+    }
+  },
+  "derived_files": {
+    "report/configs/*.json": "Extracted config from the corresponding observed run; E4 100% recreated with the checked-in ablations function and disclosed baseline reuse.",
+    "report/observed_final_steps.json": "Four step-300 rows from the rendered notebook output, not full training logs.",
+    "report/e0_preview_example.json": "Single visible item from a truncated raw-prediction preview."
+  },
+  "scope": "E0-E4",
+  "e5": {
+    "status": "incomplete",
+    "observed_step": 18,
+    "planned_steps": 60,
+    "error": "ValueError: Out of range float values are not JSON compliant: nan",
+    "location": "solution.training callback on_log -> solution.storage.append_jsonl"
+  },
+  "unavailable_artifacts": [
+    "Complete raw test predictions and test split/images for coordinate rescoring, session bootstrap and six annotated predictions",
+    "Complete training logs for loss curves"
+  ]
+}

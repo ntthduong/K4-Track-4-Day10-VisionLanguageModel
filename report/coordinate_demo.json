@@ -1,0 +1,13 @@
+{
+  "purpose": "Synthetic coordinate demonstration only; not experimental evidence",
+  "image_width": 640,
+  "image_height": 360,
+  "normalized_box": [
+    400,
+    400,
+    600,
+    600
+  ],
+  "correct_f1": 1.0,
+  "wrong_pixel_f1": 0.0
+}
